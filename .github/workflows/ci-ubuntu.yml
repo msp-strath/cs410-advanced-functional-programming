@@ -1,7 +1,7 @@
 name: Build 2025 content
 on:
   push:
-    branches: *
+    branches:
 jobs:
   check:
     name: Check 0-Install.agda
