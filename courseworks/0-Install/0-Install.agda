@@ -16,9 +16,9 @@
 -- load without any issue. By pressing `C-c C-l` the module should be semantically
 -- highlighted.
 
--- Running `make` in the courseworks directory should successfully compile the
--- file and you should then be able to run your first Agda program by executing
--- `./0-Install`.
+-- Running `make` in the current directory should successfully compile the
+-- file and then run the executable. You'll be prompted for your name, greeted,
+-- and presented with a random string.
 
 {-# OPTIONS --erasure --guardedness #-}
 
