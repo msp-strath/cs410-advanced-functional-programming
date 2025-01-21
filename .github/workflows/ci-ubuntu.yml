@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # Setup Agda 2.7.0.1 with its agda-stdlib version 2.2:
-      - uses: wenkokke/setup-agda@v2
+      - uses: wenkokke/setup-agda@main
         with:
           agda-version: '2.7.0.1'
           agda-stdlib-version: '2.2'
