@@ -3,13 +3,19 @@ on:
   push:
     branches:
 jobs:
-  check:
+  courseworks:
     name: Check 0-Install.agda
     runs-on: ubuntu-latest # or macOS-latest, or windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Setup Agda 2.7.0.1 with its agda-stdlib version 2.2:
+      # Setup GHC and cabal
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.8.2'
+          cabal-version: '3.10.3.0'
+
+      # Setup Agda its standard library
       - uses: wenkokke/setup-agda@main
         with:
           agda-version: '2.7.0.1'
@@ -18,6 +24,6 @@ jobs:
           agda-defaults: |
             standard-library
 
-      # Check 0-Install.agda:
+      # Check 0-Install.agda
       - run: 'echo "ci" | make'
         working-directory: courseworks/0-Install
