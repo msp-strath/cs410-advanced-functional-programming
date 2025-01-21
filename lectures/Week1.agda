@@ -66,3 +66,66 @@ head [] = {!!}
 head (x ,- xs) = x
 
 -- ...
+
+data List1 (X : Set) : Set where
+  _,-_ : (x : X) (xs : List X) -> List1 X
+
+variable
+  X : Set
+  xs : List X
+
+head1 : List1 X -> X
+head1 (x ,- xs) = x
+
+zap1 : {S T : Set} -> List1 (S -> T) -> List1 S -> List1 T
+zap1 (f ,- fs) (x ,- xs) = f x ,- zap fs xs
+
+
+---- ListN
+
+data Nat : Set where
+  zero : Nat
+  suc : Nat → Nat
+
+_+N_ : Nat -> Nat -> Nat
+zero +N m = m
+suc n +N m = suc (n +N m)
+
+_ : Nat
+_ = suc (suc (suc zero))
+
+variable
+  m n p : Nat
+
+data ListN (X : Set) : Nat -> Set where
+  []   : ListN X zero
+  _,-_ : (x : X) (xs : ListN X n) -> ListN X (suc n)
+
+headN : ListN X (suc n) -> X
+headN (x ,- xs) = x
+
+zapN : {S T : Set} -> ListN (S -> T) n -> ListN S n -> ListN T n
+zapN [] [] = []
+zapN (f ,- fs) (s ,- ss) = (f s) ,- zapN fs ss
+
+appendN : ListN X n -> ListN X m -> ListN X (n +N m)
+appendN [] ys = ys
+appendN (x ,- xs) ys = x ,- appendN xs ys
+
+record _×_ (A B : Set) : Set where
+  constructor _,_
+  field
+    fst : A
+    snd : B
+
+data Pair (A B : Set) : Set where
+  _,_ : A → B → Pair A B
+
+_ : Nat × List Nat
+_ = zero , []
+
+splitN : ListN X (m +N n) → ListN X m × ListN X n
+splitN {m = zero}  xs = [] , xs
+splitN {m = suc m} (x ,- xs)
+  = let (pref , suff) = splitN xs in
+    (x ,- pref) , suff
