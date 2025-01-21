@@ -15,6 +15,8 @@ jobs:
           agda-version: '2.7.0.1'
           agda-libraries: |
             https://github.com/agda/agda-stdlib.git#v2.2
+          agda-defaults: |
+            standard-library
 
       # Check 0-Install.agda:
       - run: 'echo "ci" | make'
