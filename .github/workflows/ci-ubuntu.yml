@@ -1,0 +1,20 @@
+name: basic
+on:
+  push:
+    branches: ['main']
+jobs:
+  check:
+    name: Check 0-Install.agda
+    runs-on: ubuntu-latest # or macOS-latest, or windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Agda 2.7.0.1 with its agda-stdlib version 2.2:
+      - uses: wenkokke/setup-agda@v2
+        with:
+          agda-version: '2.7.0.1'
+          agda-stdlib-version: '2.2'
+
+      # Check 0-Install.agda:
+      - run: 'echo "ci" | make'
+        working-directory: courseworks/0-Install
