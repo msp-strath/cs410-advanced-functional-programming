@@ -127,5 +127,5 @@ _ = zero , []
 splitN : ListN X (m +N n) → ListN X m × ListN X n
 splitN {m = zero}  xs = [] , xs
 splitN {m = suc m} (x ,- xs)
-  = let (pref , suff) = splitN xs in
-    (x ,- pref) , suff
+  = let (pref , suff) = splitN {m = m} xs in
+    (x ,- {!!}) , {!!}
