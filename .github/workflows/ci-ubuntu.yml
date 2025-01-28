@@ -27,3 +27,7 @@ jobs:
       # Check 0-Install.agda
       - run: 'echo "ci" | make'
         working-directory: courseworks/0-Install
+
+      # Check 1-Circuits.agda
+      - run: make
+        working-directory: courseworks/1-Circuits
