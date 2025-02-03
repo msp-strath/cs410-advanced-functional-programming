@@ -19,17 +19,26 @@
 ------------------------------------------------------------------------
 -- Cliffhanger
 
--- Fred?
--- sym, trans in terms of subst
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
 
+-- Fred?
+-- sym, trans in terms of subst
 
 
 
+-- More generally: prop eq & Leibnitz eq are equivalent
 
+infix 4 _≡ᴸ_
 
+_≡ᴸ_ : {X : Set} (x y : X) → Set₁
+x ≡ᴸ y = (P : _ → Set) → P x → P y
 
+toLeibnitz : ∀ {X : Set} {x y : X} → x ≡ y → x ≡ᴸ y
+toLeibnitz eq = {!!}
+
+fromLeibnitz : ∀ {X : Set} {x y : X} → x ≡ᴸ y → x ≡ y
+fromLeibnitz lbz = {!!}
 
 
 ------------------------------------------------------------------------
@@ -37,6 +46,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
 
 open import Data.Nat.Base using (ℕ; zero; suc; _+_; _*_)
 
+-- Guillaume?
 -- Going back to 1+n ≡ n+1; 17 ≡ 42
 
 
@@ -49,7 +59,7 @@ open import Data.Nat.Base using (ℕ; zero; suc; _+_; _*_)
 -- Double negation?
 
 
-
+-- Conor?
 -- Implication
 
 
