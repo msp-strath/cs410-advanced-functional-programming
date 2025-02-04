@@ -209,5 +209,5 @@ dne-dec : ∀ {B} → Dec B → Not (Not B) → B
 dne-dec dec = {!!}
 
 
-nat-dec : (m n : ℕ) → Dec (m ≡ n)
-nat-dec = ?
+nat-eq-dec : (m n : ℕ) → Dec (m ≡ n)
+nat-eq-dec = {!!}
