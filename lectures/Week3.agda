@@ -31,18 +31,18 @@ sym {x = x} p = subst (λ z → z ≡ x) p refl
 trans : {X : Set} -> {x y z : X} -> x ≡ y -> y ≡ z → x ≡ z
 trans {x = x} {y} {z} p = subst (λ y → y ≡ z → x ≡ z) p (λ r → r)
 
--- More generally: prop eq & Leibnitz eq are equivalent
+-- More generally: prop eq & Leibniz eq are equivalent
 
 infix 4 _≡ᴸ_
 
 _≡ᴸ_ : {X : Set} (x y : X) → Set₁
 x ≡ᴸ y = (P : _ → Set) → P x → P y
 
-toLeibnitz : ∀ {X : Set} {x y : X} → x ≡ y → x ≡ᴸ y
-toLeibnitz eq P px = subst P eq px
+toLeibniz : ∀ {X : Set} {x y : X} → x ≡ y → x ≡ᴸ y
+toLeibniz eq P px = subst P eq px
 
-fromLeibnitz : ∀ {X : Set} {x y : X} → x ≡ᴸ y → x ≡ y
-fromLeibnitz {x = x} lbz = lbz (\ y -> x ≡ y) refl
+fromLeibniz : ∀ {X : Set} {x y : X} → x ≡ᴸ y → x ≡ y
+fromLeibniz {x = x} lbz = lbz (\ y -> x ≡ y) refl
 
 
 ------------------------------------------------------------------------
@@ -97,30 +97,117 @@ _ = \ x -> x
 dni : {X : Set} -> X -> Not (Not X)
 dni x notx = notx x
 
+DNE : Set₁
+DNE = (B : Set) → Not (Not B) → B
+
 {-
 -- We cannot hope to implement this:
 dne : {X : Set} -> Not (Not X) -> X
 dne notnotx = {!!}
 -}
 
--- Conor?
 -- Implication
 
+Implies : Set → Set → Set
+Implies A B = A → B
+
+_ : Not (Implies (0 ≡ 0) ⊥)
+_ = dni refl
+
+-- Not (Implies A B)
+-- A × Not B
 
 -- Conjunction
+--    A         B
+-- -----------------
+--       A ∧ B
 
+record And (A B : Set) : Set where
+  constructor _,_
+  field
+    fst : A
+    snd : B
+open And
+
+diagonal : ∀ {A} → A → And A A
+diagonal prfA = prfA , prfA
+
+swap : ∀ {A B} → And A B → And B A
+-- swap (prfA , prfB) = prfB , prfA
+swap prfAB = snd prfAB , fst prfAB
+
+-- Refutations
+NotImplies : Set → Set → Set
+NotImplies A B = And A (Not B)
+
+_ : NotImplies (0 ≡ 0) ⊥
+_ = refl , λ x → x
 
 -- Disjunction
+data Or (A B : Set) : Set where
+  inl : A -> Or A B
+  inr : B -> Or A B
+
+distribute : forall {A B C} -> And A (Or B C) -> Or (And A B) (And A C)
+distribute (a , inl b) = inl (a , b)
+distribute (a , inr c) = inr (a , c)
+
+record ⊤ : Set where
+  constructor tt
+
+_ : ℕ
+_ = 42
+
+_ : ⊤
+_ = _
+
+_ : (x : ⊤) → x ≡ tt
+_ = λ x → refl
 
 -- Excluded middle?
 
+LEM : Set₁
+LEM = (B : Set) → Or B (Not B)
+
+{-
+-- We cannot hope to prove this either (if we could, we could solve the unsolvable Halting Problem)
+lem : LEM
+lem B = {!!}
+-}
+
+-- ¬¬LEM : (LEM → ⊥) → ⊥
+
+open import Function.Base using (case_of_)
+
+lem⇒dne : LEM → DNE
+lem⇒dne lem B ¬¬b = case lem B of λ where
+  (inl b)  → b
+  (inr ¬b) → explosion (¬¬b ¬b)
+
+dne⇒lem : DNE → LEM
+dne⇒lem dne B = dne (Or B (Not B)) f
+ where
+  f : (Or B (B → ⊥) → ⊥) → ⊥
+  f not-[b-or-not-b] = not-[b-or-not-b] (inr (λ b → not-[b-or-not-b] (inl b)))
 
 ------------------------------------------------------------------------
 -- De Morgan's laws
 
+-- ∀ b c → not (b ∧ c) ≡ not b ∨ not c
 
 
 
 
 ------------------------------------------------------------------------
 -- A DSL where classical reasoning applies: Decidable types
+
+
+Dec : Set → Set
+Dec B = Or B (Not B)
+
+dne-dec : ∀ {B} → Dec B → Not (Not B) → B
+dne-dec dec = {!!}
+
+
+nat-dec : (m n : ℕ) → Dec (m ≡ n)
+nat-dec = ?
