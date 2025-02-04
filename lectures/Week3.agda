@@ -71,7 +71,7 @@ _ = λ ()
   P 1 = ⊥ -- something empty
   P n = ℕ -- anything
 
--- in Haskell: \ x -> case x of {} 
+-- in Haskell: \ x -> case x of {}
 
 explosion : ⊥ → {A : Set} → A
 explosion ()
@@ -112,5 +112,15 @@ dne notnotx = {!!}
 
 -- Disjunction
 
+-- Excluded middle?
 
--- De Morgan's laws?
+
+------------------------------------------------------------------------
+-- De Morgan's laws
+
+
+
+
+
+------------------------------------------------------------------------
+-- A DSL where classical reasoning applies: Decidable types
