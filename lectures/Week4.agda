@@ -166,10 +166,20 @@ postulate
 
 
 open import Relation.Binary.PropositionalEquality
-  using (refl; sym; trans)
+open ≡-Reasoning
+
+open import Data.Nat.Properties
 
 length-++ : (xs ys : List A) → length (xs ++ ys) ≡ length xs + length ys
-length-++ xs ys = {!!}
+length-++ xs ys = begin
+  length (xs ++ ys)                             ≡⟨⟩
+  0 + length (xs ++ ys)                         ≡⟨ length-as-foldr 0 (xs ++ ys) ⟩
+  foldr (λ _ → suc) 0 (xs ++ ys)                ≡⟨ sym (foldr-++ (λ _ → suc) 0 xs ys) ⟩
+  foldr (λ _ → suc) (foldr (λ _ → suc) 0 ys) xs ≡⟨ cong (λ hole → foldr (λ _ → suc) hole xs) (sym (length-as-foldr 0 ys)) ⟩
+  foldr (λ _ → suc) (0 + length ys) xs          ≡⟨⟩
+  foldr (λ _ → suc) (length ys) xs              ≡⟨ sym (length-as-foldr (length ys) xs) ⟩
+  length ys + length xs                         ≡⟨ +-comm (length ys) (length xs) ⟩
+  length xs + length ys ∎
 
 
 
@@ -178,16 +188,32 @@ length-++ xs ys = {!!}
 -- Finding a witness
 -- Building a gadget to build a proof for you!
 
+open import Data.Unit
+
+
+data IsNo : Dec A → Set where
+
+isYes : Dec A → Set
+isYes (yes _) = ⊤
+isYes d = ⊥
+
+magic : (d : Dec A) {_ : isYes d} → A
+magic (yes p) = p
+
+{-
+isEven : (n : ℕ) → {_ : isYes (even? n)} → Even n
+isEven n {constraint} with even? n
+... | yes evenn = evenn
+-}
+
 _ : Even 100
-_ = {!!}
+_ = magic (even? 100)
 
 
-
--- isEven : (n : ℕ) → Even n
-
-
-
-
+{-
+_ : Even 101
+_ = isEven 101
+-}
 
 
 
@@ -198,21 +224,36 @@ _ = {!!}
 -----------------------------------------------------------------------
 -- All vs. Any
 
--- Define All, Any
+data All (P : A → Set) : List A → Set where
+  []  : All P []
+  _∷_ : P x → All P xs → All P (x ∷ xs)
 
--- _ : All Even ?
+_ : All Even (0 ∷ 100 ∷ 20 ∷ 42 ∷ [])
+_ = magic (even? 0) ∷ magic (even? 100) ∷ magic (even? 20) ∷ magic (even? 42) ∷ []
 
 
 open import Data.Vec using (Vec; []; _∷_)
 
---
+
+_ : All (Vec ℕ) (0 ∷ 1 ∷ 2 ∷ [])
+_ = []
+  ∷ (0 ∷ [])
+  ∷ (1 ∷ 2 ∷ [])
+  ∷ []
 
 
+data Any (P : A → Set) : List A → Set where
+  next : Any P xs → Any P (x ∷ xs)
+  win  : P x → Any P (x ∷ xs)
 
-{-
+
+-- Define All, Any
+
+
 search : {P : A → Set} →
          (∀ n → Dec (P n)) →   -- we can decide the predicate P
          (xs : List A) →
          ¬ (All (¬_ ∘′ P) xs) → -- we know it's not untrue of all the values in the list
+         -- ¬ (¬ Any P xs) →
          Any P xs              -- so it must be true of at least one of them
--}
+search = {!!}
