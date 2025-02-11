@@ -107,8 +107,8 @@ odd? (suc n) with even? n
 
 
 -- What would be a more useful statement?
-evenOrOdd : ∀ n → Even n ⊎ Odd n
-evenOrOdd = {!!}
+-- evenOrOdd : ∀ n → Even n ⊎ Odd n
+-- evenOrOdd = {!!}
 
 
 
@@ -119,7 +119,7 @@ evenOrOdd = {!!}
 -- Finding a witness
 -- Computing a natural number, with a proof it is meaningful
 
-open import Data.Nat.Base using (_≤_; z≤n; s≤s)
+open import Data.Nat.Base using (ℕ; zero; suc; _+_; _≤_; z≤n; s≤s)
 open import Data.Product.Base using (∃)
 open import Function.Base using (_$_)
 
@@ -144,7 +144,46 @@ anOdd = markov odd? (λ noOdds → noOdds (5 , suc (suc (suc (suc (suc zero)))))
 
 
 
+-----------------------------------------------------------------------
+-- Detour: equational proofs
 
+-- This may be useful for the coursework so here we go.
+
+
+open import Data.List.Base using (List; []; _∷_; _++_)
+
+variable
+  x : A
+  xs : List A
+
+postulate
+
+  foldr : (A → B → B) → B → List A → B
+  foldr-++ : ∀ (c : A → B → B) n xs ys → foldr c (foldr c n ys) xs ≡ foldr c n (xs ++ ys)
+
+  length : List A → ℕ
+  length-as-foldr : ∀ m (xs : List A) → m + length xs ≡ foldr (λ _ → suc) m xs
+
+
+open import Relation.Binary.PropositionalEquality
+  using (refl; sym; trans)
+
+length-++ : (xs ys : List A) → length (xs ++ ys) ≡ length xs + length ys
+length-++ xs ys = {!!}
+
+
+
+
+-----------------------------------------------------------------------
+-- Finding a witness
+-- Building a gadget to build a proof for you!
+
+_ : Even 100
+_ = {!!}
+
+
+
+-- isEven : (n : ℕ) → Even n
 
 
 
@@ -159,18 +198,21 @@ anOdd = markov odd? (λ noOdds → noOdds (5 , suc (suc (suc (suc (suc zero)))))
 -----------------------------------------------------------------------
 -- All vs. Any
 
-open import Data.List.Base using (List; []; _∷_)
-
-variable
-  x : A
-  xs : List A
-
 -- Define All, Any
 
+-- _ : All Even ?
+
+
+open import Data.Vec using (Vec; []; _∷_)
+
+--
+
+
+
 {-
-search : {P : ℕ → Set} →
+search : {P : A → Set} →
          (∀ n → Dec (P n)) →   -- we can decide the predicate P
-         (xs : List ℕ) →
-         ¬ (All (¬_ ∘′ P) xs) → -- we know it's not untrue of all naturals in the list
+         (xs : List A) →
+         ¬ (All (¬_ ∘′ P) xs) → -- we know it's not untrue of all the values in the list
          Any P xs              -- so it must be true of at least one of them
 -}
