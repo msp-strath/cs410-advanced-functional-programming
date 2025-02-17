@@ -15,4 +15,4 @@ repository (either here or on the departmental gitlab) and
 inviting me.
 
 1. CW1: Thursday 20th Feb AoE [Well typed circuits](courseworks/1-Circuits)
-2. CW2: TBD
+2. CW2: Thursday 10th April AoE [Genetic algorithms](courseworks/1-Genetic)
