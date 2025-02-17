@@ -1,13 +1,15 @@
-open import Data.Nat.Base using (ℕ; zero; suc)
-open import Data.Bool.Base using (Bool; true; false)
-open import Data.Maybe.Base using (Maybe; just; nothing)
+open import Data.Nat.Base using (ℕ; zero; suc; _+_)
+open import Data.Bool.Base using (Bool; true; false; if_then_else_)
+open import Data.Maybe.Base using (Maybe; just; nothing; _>>=_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 ---------------------------------------------------------------------------
--- CW2
+-- Courseworks
 ---------------------------------------------------------------------------
 
--- Released this afternoon
+-- CW1: deadline this Thursday at 5pm
+
+-- CW2: released this afternoon
 -- Demo?
 
 
@@ -26,11 +28,34 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 -- expressions, or an if-then-else expression.
 
 data Expr : Set where
+  nat  : ℕ → Expr
+  bool : Bool → Expr
+  add  : Expr → Expr → Expr
+  ifte : (b : Expr) (t e : Expr) → Expr
 
--- infixl 4 _+E_
--- infix 0 ifE_then_else_
+
+pattern _+E_ a b = add a b
+pattern ifE_then_else_ b t e = ifte b t e
+
+infixl 4 _+E_
+infix 0 ifE_then_else_
 
 -- Examples (name them so we can reuse them later on)
+
+aNat : Expr
+aNat = nat 42
+
+aBool : Expr
+aBool = bool true
+
+aGoodSum : Expr
+aGoodSum = add aNat (nat 10)
+
+aBadSum : Expr
+aBadSum = add aNat aBool
+
+anIFTE : Expr
+anIFTE = ifE aBool then aNat else nat 0
 
 ---------------
 -- Evaluation
@@ -39,15 +64,52 @@ data Expr : Set where
 -- A value is either a number or a Boolean.
 
 data Val : Set where
+  nat : ℕ -> Val
+  bool : Bool -> Val
 
 -- Now we can Maybe produce a value from an expression; we return
 -- `nothing` if things don't make sense.
 
--- eval : Expr → Val
+_+V_ : Val → Val → Maybe Val
+nat n +V nat n' = just (nat (n + n'))
+_ +V _ = nothing
 
+ifV_then_else : Val → Maybe Val → Maybe Val → Maybe Val
+ifV bool b then l else r = if b then l else r
+ifV _ then l else r = nothing
+
+eval : Expr → Maybe Val
+eval (nat n)  = just (nat n)
+eval (bool b) = just (bool b)
+eval (e +E e') = do
+  nat n ← eval e where _ → nothing
+  nat n' ← eval e' where
+    bool true → nothing
+    bool false → nothing
+  just (nat (n + n'))
+{-
+eval (e +E e') = do
+  val ← eval e
+  val' ← eval e'
+  val +V val'
+-}
+eval (ifE e then e' else e'') = do
+  val ← eval e
+  ifV val then eval e' else (eval e'')
+
+{-
+with eval e | eval e'
+... | just (nat n) | just (nat n') = just (nat (n + n'))
+... | _ | _ = nothing
+eval (ifE e then e' else e'') with eval e
+... | just (bool true) = eval e'
+... | just (bool false) = eval e''
+... | _ = nothing
+-}
 
 -- examples
 
+test = eval (ifE bool true then aGoodSum else aBadSum)
 
 ---------------------------------------------------------------------------
 -- Typed expressions
@@ -57,12 +119,23 @@ data Val : Set where
 -- toy language.
 
 data Ty : Set where
+  bool nat : Ty
 
 -- We now annotate each expression with their expected type. Note that
 -- if-then-else works for arbitrary types of the branches, as long as
 -- they coincide.
 
 data TExpr : Ty -> Set where
+  nat : ℕ -> TExpr nat
+  bool : Bool -> TExpr bool
+  add : TExpr nat -> TExpr nat -> TExpr nat
+  ifte : forall {T} -> TExpr bool -> TExpr T -> TExpr T -> TExpr T
+
+aTGoodSum : TExpr nat
+aTGoodSum = add (nat 42) (nat 10)
+
+-- aTBadSum : TExpr nat
+-- aTBadSum = add (nat 42) {!bool true!}
 
 ---------------
 -- Evaluation
