@@ -181,7 +181,23 @@ embed {bool} v = bool v
 embed {nat} v = nat v
 
 ∣∣-correct : ∀ {t} (e : TExpr t) → eval ∣ e ∣ ≡ just (embed (teval e))
-∣∣-correct = {!!}
+∣∣-correct (nat n) = refl
+∣∣-correct (bool n) = refl
+∣∣-correct (add em en)
+  with just (nat m) ← eval ∣ em ∣
+     | refl ← ∣∣-correct em
+  with just (nat n) ← eval ∣ en ∣
+     | refl ← ∣∣-correct en
+  = refl
+∣∣-correct (ifte eb el er)
+  with eval ∣ eb ∣ | {teval eb} | ∣∣-correct eb
+... | just (bool true) | refl = ∣∣-correct el
+... | just (bool false) | refl = ∣∣-correct er
+
+eqTy? : (s : Ty) → (t : Ty) → Maybe (s ≡ t)
+eqTy? bool bool = just refl
+eqTy? nat nat = just refl
+eqTy? _ _ = nothing
 
 
 -- Conversely, we can record when a given untyped expression is
@@ -196,11 +212,28 @@ record Welltyped (e : Expr) : Set where
 open Welltyped
 -- And we can infer the type of an expression
 
-eqTy? : (s : Ty) → (t : Ty) → Maybe (s ≡ t)
-eqTy? bool bool = just refl
-eqTy? nat nat = just refl
-eqTy? _ _ = nothing
 
+ifT-eq : ∀ {a b c x y z} →
+  (ifE a then b else c) ≡ (ifE x then y else z) →
+  b ≡ y
+ifT-eq refl = refl
+
+typingUnique : (e : Expr) → (p q : Welltyped e) → aType p ≡ aType q
+typingUnique e
+  (mkWellTyped aType₁ (nat x) refl)
+  (mkWellTyped aType₂ (nat x₁) proof₂) = refl
+typingUnique e
+  (mkWellTyped aType₁ (bool x) refl)
+  (mkWellTyped aType₂ (bool x₁) proof₂) = refl
+typingUnique e
+  (mkWellTyped aType₁ (add aTerm₁ aTerm₂) refl)
+  (mkWellTyped aType₂ (add aTerm₃ aTerm₄) proof₂) = refl
+typingUnique (ifte eb el er)
+  (mkWellTyped aType₁ (ifte aTerm₁ aTerm₂ aTerm₃) refl)
+  (mkWellTyped aType₂ (ifte aTerm₄ aTerm₅ aTerm₆) proof₂)
+  = typingUnique el
+    (mkWellTyped aType₁ aTerm₂ refl)
+    (mkWellTyped aType₂ aTerm₅ (ifT-eq proof₂))
 
 
 infer : (e : Expr) -> Maybe (Welltyped e)
@@ -220,8 +253,39 @@ infer (ifE eb then et else ee) = do
   refl <- eqTy? ty₁ ty₂
   just (mkWellTyped ty₁ (ifte tm tm₁ tm₂) refl)
 
-typingUnique : (e : Expr) → (p q : Welltyped e) → aType p ≡ aType q
-typingUnique = {!!}
+{-
+record Welltyped (ty : Ty) (e : Expr) : Set where
+  constructor mkWellTyped
+  field
+    aTerm : TExpr ty
+    proof : ∣ aTerm ∣ ≡ e
+open Welltyped
+-- And we can infer the type of an expression
+
+open import Data.Product.Base using (∃; -,_; _,_)
+
+infer : (e : Expr) -> Maybe (∃ λ ty → Welltyped ty e)
+check : (ty : Ty) (e : Expr) → Maybe (Welltyped ty e)
+
+infer (nat n) = just (-, mkWellTyped (nat n) refl)
+infer (bool b) = just (-, mkWellTyped (bool b) refl)
+infer (en +E em) = do
+  mkWellTyped tm refl <- check nat en
+  mkWellTyped tm' refl <- check nat em
+  just (-, mkWellTyped (add tm tm') refl)
+infer (ifE eb then et else ee) = do
+  mkWellTyped tm refl <- check bool eb
+  ty , mkWellTyped tm₁ refl <- infer et
+  mkWellTyped tm₂ refl <- check ty ee
+  just (-, mkWellTyped (ifte tm tm₁ tm₂) refl)
+
+check ty e = do
+  ty′ , e' ← infer e
+  refl ← eqTy? ty ty′
+  just e'
+-}
+
+
 
 anIFTE' : Expr
 anIFTE' = ifE aBool then aNat else bool true
