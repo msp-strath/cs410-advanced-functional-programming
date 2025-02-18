@@ -1,4 +1,4 @@
- name: Build 2025 content
+name: Build 2025 content
 on:
   push:
     branches:
@@ -32,6 +32,6 @@ jobs:
       - run: make
         working-directory: courseworks/1-Circuits
 
-      # Check 1-Circuits.agda
+      # Check 2-Genetic.agda
       - run: agda -c 2-Genetic.agda; true
         working-directory: courseworks/2-Genetic
