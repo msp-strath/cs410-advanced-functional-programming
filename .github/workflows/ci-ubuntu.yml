@@ -33,5 +33,5 @@ jobs:
         working-directory: courseworks/1-Circuits
 
       # Check 2-Genetic.agda
-      - run: agda -c 2-Genetic.agda; true
+      - run: make ci
         working-directory: courseworks/2-Genetic

@@ -4,3 +4,6 @@ all:
 
 clean:
 	rm -rf MAlonzo
+
+ci:
+	agda 2-Genetic.agda; true
