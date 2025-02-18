@@ -4,7 +4,7 @@ on:
     branches:
 jobs:
   courseworks:
-    name: Check 0-Install.agda
+    name: Check courseworks
     runs-on: ubuntu-latest # or macOS-latest, or windows-latest
     steps:
       - uses: actions/checkout@v4
