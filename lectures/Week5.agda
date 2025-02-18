@@ -144,7 +144,24 @@ aTGoodSum = add (nat 42) (nat 10)
 -- We can now compute the type of the value of a given typed
 -- expression.
 
--- TVal; teval
+TVal : Ty → Set
+TVal bool = Bool
+TVal nat = ℕ
+
+
+{-
+data TVal : Ty → Set where
+  nat : ℕ -> TVal nat
+  bool : Bool -> TVal bool
+-}
+
+teval : forall {T} -> TExpr T -> TVal T
+teval (nat n) = n
+teval (bool b) = b
+teval (add en em) = teval en + teval em
+teval (ifte eb et ee) = if teval eb then teval et else teval ee
+
+
 
 --------------------------------------------------------------------------
 -- Relating typed and untyped expressions
@@ -152,21 +169,65 @@ aTGoodSum = add (nat 42) (nat 10)
 
 -- It is easy to forget the type of a typed expression.
 
--- ∣_∣  : ∀ {t} → TExpr t -> Expr
+∣_∣ : ∀ {t} → TExpr t -> Expr
+∣ nat n         ∣ = nat n
+∣ bool b        ∣ = bool b
+∣ add en em     ∣ = add ∣ en ∣ ∣ em ∣
+∣ ifte eb et ee ∣ = ifte (∣ eb ∣) (∣ et ∣) (∣ ee ∣)
 
+
+embed : ∀ {t} → TVal t → Val
+embed {bool} v = bool v
+embed {nat} v = nat v
+
+∣∣-correct : ∀ {t} (e : TExpr t) → eval ∣ e ∣ ≡ just (embed (teval e))
+∣∣-correct = {!!}
 
 
 -- Conversely, we can record when a given untyped expression is
 -- welltyped. (As we have seen, this is not always the case.)
 
 record Welltyped (e : Expr) : Set where
-
-
+  constructor mkWellTyped
+  field
+    aType : Ty
+    aTerm : TExpr aType
+    proof : ∣ aTerm ∣ ≡ e
+open Welltyped
 -- And we can infer the type of an expression
 
--- infer : (e : Expr) -> Welltyped e
+eqTy? : (s : Ty) → (t : Ty) → Maybe (s ≡ t)
+eqTy? bool bool = just refl
+eqTy? nat nat = just refl
+eqTy? _ _ = nothing
 
 
+
+infer : (e : Expr) -> Maybe (Welltyped e)
+infer (nat n) = just (mkWellTyped nat (nat n) refl)
+infer (bool b) = just (mkWellTyped bool (bool b) refl)
+infer (en +E em) = do
+  mkWellTyped ty₁ tm refl <- infer en
+  refl ← eqTy? ty₁ nat
+  mkWellTyped ty₂ tm' refl <- infer em
+  refl ← eqTy? ty₂ nat
+  just (mkWellTyped nat (add tm tm') refl)
+infer (ifE eb then et else ee) = do
+  mkWellTyped ty₀ tm refl <- infer eb
+  refl ← eqTy? ty₀ bool
+  mkWellTyped ty₁ tm₁ refl <- infer et
+  mkWellTyped ty₂ tm₂ refl <- infer ee
+  refl <- eqTy? ty₁ ty₂
+  just (mkWellTyped ty₁ (ifte tm tm₁ tm₂) refl)
+
+typingUnique : (e : Expr) → (p q : Welltyped e) → aType p ≡ aType q
+typingUnique = {!!}
+
+anIFTE' : Expr
+anIFTE' = ifE aBool then aNat else bool true
+
+
+foo = infer anIFTE'
 
 
 ---------------------------------------------------------------------------
@@ -177,7 +238,8 @@ record Welltyped (e : Expr) : Set where
 -- false`. Using typed expressions, we can already record in the type
 -- of this function that this optimisation is type-preserving.
 
--- reduce-if : ∀ {T} → TExpr T -> TExpr T
+reduce-if : ∀ {T} → TExpr T -> TExpr T
+reduce-if e = {!!}
 
 
 
