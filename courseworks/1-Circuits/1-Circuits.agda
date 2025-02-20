@@ -598,7 +598,7 @@ _ = λ { true  true  → {!!}
 -- You are free to implement whatever you want. Try to put an emphasis
 -- on elegant type & code. Here are some ideas:
 
--- * A collection of CS106-type circuits (proven correct? maximasing parallelism?)
+-- * A collection of CS106-type circuits (proven correct? maximising parallelism?)
 -- * A renderer displaying a circuit as a string (or a dot graph?)
 -- * A compiler from a small language to circuits
 -- * Recursive definitions of complex circuits
