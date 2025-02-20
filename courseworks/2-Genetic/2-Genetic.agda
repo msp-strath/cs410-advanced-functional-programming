@@ -646,7 +646,7 @@ module FPoly where
           String.++ String.fromVec (' ' ∷ dash ∷ pipe ∷ Vec.map isHere vs ++ pipe ∷ []))
       ∷ go pad n (ℤ.pred line) vs where
 
-      -- Being on y axis, show '|' if we're additionally on the x axis
+      -- Being on y axis, show '|' if we're additionally on the x axis show '-'
       pipe : Char
       pipe = if does (line ℤ.≟ (+ 0)) then '-' else '|'
 
@@ -957,7 +957,7 @@ main = run $ do
 --     multiple strands for different intervals
 --     dynamically discovering new interval splits
 --
--- * A more developped theory of polynomials e.g.
+-- * A more developed theory of polynomials e.g.
 --     closure under multiplication, composition, derivation
 --     proven correct with respect to horner
 --     used for new notions of crossovers?
