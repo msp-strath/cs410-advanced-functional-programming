@@ -1,2 +1,4 @@
 *.agdai
-MAlonzo/**
+**/MAlonzo
+**/dist-newstyle
+*~
