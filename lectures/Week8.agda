@@ -2,7 +2,7 @@
 module Week8 where
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_; refl; cong; sym; module ≡-Reasoning)
+  using (_≡_; refl; cong; cong₂; sym; module ≡-Reasoning)
 
 open import Function using (_∘′_; id)
 
@@ -80,7 +80,6 @@ monoid-cat .then-assoc f g h = monHomEq _ _ refl
 monoid-cat .then-identity f = monHomEq _ _ refl
 monoid-cat .identity-then f = monHomEq _ _ refl
 
-
 open import Data.Unit.Base using (⊤)
 {-
 
@@ -111,10 +110,84 @@ module _ (C : Category) where
 
   squish : ∀ {s t} → Path M s t → M s t
   squish []            = C.identity
+  squish (step ∷ [])   = step
   squish (step ∷ path) = step C.then squish path
 
   squish-++ : ∀ {s m t} (p : Path M s m) (q : Path M m t) →
      squish (p ++ q) ≡ squish p C.then squish q
-  squish-++ = {!!}
+  squish-++ [] q = sym (C.identity-then (squish q))
+  squish-++ (step ∷ []) [] = sym (C.then-identity step)
+  squish-++ (step ∷ []) (x ∷ q) = refl
+  squish-++ (step ∷ (x ∷ p)) q = let open ≡-Reasoning in begin
+    squish ((step ∷ (x ∷ p)) ++ q)
+      ≡⟨⟩
+    step C.then squish ((x ∷ p) ++ q)
+      ≡⟨ cong (step C.then_) (squish-++ (x ∷ p) q) ⟩
+    step C.then (squish (x ∷ p) C.then squish q)
+      ≡⟨ sym (C.then-assoc _ _ _) ⟩
+    (step C.then squish (x ∷ p)) C.then squish q
+      ≡⟨ refl ⟩
+    (squish (step ∷ (x ∷ p)) C.then squish q)
+      ∎
+
 
 -- Proof by reflection
+
+
+  infixr 5 _`then_
+  data Syntax (s : O) : O → Set where
+    _`then_   : ∀ {m t} → Syntax s m → Syntax m t → Syntax s t
+    `identity : Syntax s s
+    `morphism : ∀ {t} → M s t → Syntax s t
+--    `Functor  :
+
+
+  ⟦_⟧ : ∀ {s t} → Syntax s t → M s t
+  ⟦ synl `then synr ⟧ = ⟦ synl ⟧ C.then ⟦ synr ⟧
+  ⟦ `identity       ⟧ = C.identity
+  ⟦ `morphism f     ⟧ = f
+
+  _≋'_ : ∀ {s t} (f g : Syntax s t) → Set
+  f ≋' g = ⟦ f ⟧ ≡ ⟦ g ⟧
+
+  normalise : ∀ {s t} → Syntax s t → Path M s t
+  normalise (synl `then synr)
+    = let norml = normalise synl in
+      let normr = normalise synr in
+      norml ++ normr
+  normalise `identity         = []
+  normalise (`morphism f)     = f ∷ []
+
+  _≋_ : ∀ {s t} (f g : Syntax s t) → Set
+  f ≋ g = squish (normalise f) ≡ squish (normalise g)
+
+  correct : ∀ {s t} (f : Syntax s t) → ⟦ f ⟧ ≡ squish (normalise f)
+  correct (f `then g) = let open ≡-Reasoning in begin
+    ⟦ f `then g ⟧
+      ≡⟨⟩
+    (⟦ f ⟧ C.then ⟦ g ⟧)
+      ≡⟨ cong₂ C._then_ (correct f) (correct g) ⟩
+    (squish (normalise f) C.then squish (normalise g))
+      ≡⟨ squish-++ (normalise f) (normalise g) ⟨
+    squish (normalise f ++ normalise g)
+      ≡⟨⟩
+    squish (normalise (f `then g))
+      ∎
+  correct `identity     = refl
+  correct (`morphism f) = refl
+
+  magic : ∀ {s t} (f g : Syntax s t) →
+          f ≋ g → ⟦ f ⟧ ≡ ⟦ g ⟧
+  magic f g f≋g = let open ≡-Reasoning in begin
+    ⟦ f ⟧                ≡⟨ correct f ⟩
+    squish (normalise f) ≡⟨ f≋g ⟩
+    squish (normalise g) ≡⟨ correct g ⟨
+    ⟦ g ⟧ ∎
+
+  _ : ∀ {s m₁ m₂ t} (f : M s m₁) (g : M m₁ m₂) (h : M m₂ t) →
+      (`identity `then `morphism f `then `identity `then `morphism g `then `morphism h)
+      ≋' ((`morphism f `then `morphism g) `then `morphism h)
+  _ = λ f g h → magic
+    (`identity `then `morphism f `then `identity `then `morphism g `then `morphism h)
+    ((`morphism f `then `morphism g) `then `morphism h)
+    refl
