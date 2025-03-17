@@ -145,7 +145,9 @@ record HomoMorphism (S T : Monoid) : Set where
   module S = Monoid S
   module T = Monoid T
   field
+    -- operation
     function    : S.Carrier → T.Carrier
+    -- properties
     mempty-resp : function S.mempty ≡ T.mempty
     <>-resp     : ∀ x y → function (x S.<> y) ≡ function x T.<> function y
 

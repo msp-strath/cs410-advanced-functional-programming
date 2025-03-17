@@ -184,10 +184,10 @@ module _ (C : Category) where
     squish (normalise g) ≡⟨ correct g ⟨
     ⟦ g ⟧ ∎
 
-  _ : ∀ {s m₁ m₂ t} (f : M s m₁) (g : M m₁ m₂) (h : M m₂ t) →
+  test : ∀ {s m₁ m₂ t} (f : M s m₁) (g : M m₁ m₂) (h : M m₂ t) →
       (`identity `then `morphism f `then `identity `then `morphism g `then `morphism h)
       ≋' ((`morphism f `then `morphism g) `then `morphism h)
-  _ = λ f g h → magic
+  test = λ f g h → magic
     (`identity `then `morphism f `then `identity `then `morphism g `then `morphism h)
     ((`morphism f `then `morphism g) `then `morphism h)
     refl
