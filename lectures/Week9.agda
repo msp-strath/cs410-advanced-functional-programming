@@ -92,13 +92,11 @@ import Data.Nat.Properties as ℕ
 open import Data.Vec.Base as Vec using (Vec)
 import Data.Vec.Properties as Vec
 
-{-
 Vec-Functor : (n : ℕ) → Functor SET SET
 Vec-Functor n .Functor.onObject = λ A → Vec A n
-Vec-Functor n .Functor.onMorphism = {!!}
-Vec-Functor n .Functor.onIdentity = {!!}
-Vec-Functor n .Functor.onThen = {!!}
--}
+Vec-Functor n .Functor.onMorphism = Vec.map
+Vec-Functor n .Functor.onIdentity = funext Vec.map-id
+Vec-Functor n .Functor.onThen = λ f g → funext (Vec.map-∘ g f)
 
 OP : Category → Category
 OP cat .Category.Object = Category.Object cat
@@ -118,7 +116,40 @@ Vec≤-Functor A .Functor.onThen =
 
 
 
+
+
+
 -- Forget & free
+
+
+
+
+
+
+
+
+
+-- CAT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ---------------------------------------------------------------------------
