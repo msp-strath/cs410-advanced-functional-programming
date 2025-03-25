@@ -5,6 +5,7 @@ open import Data.List.Base using (List; []; _∷_; zip; length)
 open import Data.Nat.Base using (ℕ; zero; suc; _≤′_; ≤′-reflexive; ≤′-step)
 open import Data.Nat.Properties using (_≤′?_)
 open import Data.Product.Base using (_×_; _,_)
+open import Data.String.Base using (String)
 open import Data.Unit.Base using (⊤)
 
 open import Function.Base using (_$_)
@@ -16,19 +17,21 @@ variable
   A B C I O S T : Set
 
 ------------------------------------------------------------------------
--- Adding indices to a list
+-- Adding indices to a list, poorly
 
 [_⋯_] : ℕ → ℕ → List ℕ
 [ m ⋯ n ] with m ≤′? n
-... | no ¬m≤n = []
-... | yes m≤n = go [] _ _ m≤n where
+... | no ¬m≤′n = []
+... | yes m≤′n = go [] _ m≤′n where
 
-  go : List ℕ → (m n : ℕ) (p : m ≤′ n) → List ℕ
-  go acc m m       (≤′-reflexive refl) = m ∷ acc
-  go acc m (suc n) (≤′-step p)         = go (suc n ∷ acc) m n p
+  go : List ℕ → (up : ℕ) → m ≤′ up → List ℕ
+  go acc up (≤′-reflexive refl) = up ∷ acc
+  go acc up (≤′-step p) = go (up ∷ acc) _ p
 
+_ : [ 1 ⋯ 10 ] ≡ 1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ 6 ∷ 7 ∷ 8 ∷ 9 ∷ 10 ∷ []
+_ = refl
 
-_ : [ 3 ⋯ 10 ] ≡ 3 ∷ 4 ∷ 5 ∷ 6 ∷ 7 ∷ 8 ∷ 9 ∷ 10 ∷ []
+_ : [ 10 ⋯ 1 ] ≡ []
 _ = refl
 
 -- Using zip
@@ -40,11 +43,15 @@ _ : (a b c : A) → addIndices (a ∷ b ∷ c ∷ [])
 _ = λ a b c → refl
 
 
-
 ------------------------------------------------------------------------
--- Adding indices to a list
+-- Adding indices to a list, streamly
 
+-- streams
 
+{-
+Stream : Set -> Set
+Stream A = ℕ -> A
+-}
 
 record Stream (A : Set) : Set where
   coinductive
@@ -53,54 +60,80 @@ record Stream (A : Set) : Set where
     tail : Stream A
 open Stream
 
+ones : Stream ℕ
+ones .head = 1
+ones .tail = ones
+
 [_⋯] : ℕ → Stream ℕ
 [ n ⋯] .head = n
 [ n ⋯] .tail = [ suc n ⋯]
 
+[_⋯]' : ℕ → Stream ℕ
+[ n ⋯]' .head = n
+[ n ⋯]' .tail = [ suc (suc n) ⋯]'
+
+take : ℕ → Stream A → List A
+take zero s = []
+take (suc n) s = head s ∷ take n (tail s)
+
+-- t = take 10 ([ 15 ⋯]')
 
 ∞zip : Stream A → List B → List (A × B)
-∞zip as []       = []
-∞zip as (b ∷ bs) = (as .head , b) ∷ ∞zip (as .tail) bs
+∞zip s [] = []
+∞zip s (b ∷ bs) = (head s , b) ∷ ∞zip (tail s) bs
 
 addIndices′ : List A → List (ℕ × A)
-addIndices′ = ∞zip [ 1 ⋯]
+addIndices′ as = ∞zip [ 1 ⋯] as
 
 _ : (a b c : A) → addIndices′ (a ∷ b ∷ c ∷ [])
   ≡ (1 , a) ∷ (2 , b) ∷ (3 , c) ∷ []
 _ = λ a b c → refl
 
+------------------------------------------------------------------------
+-- Input/Output trees
 
-record ∞IOTree (I O A : Set) : Set
-data IOTree (I O : Set) (A : Set) : Set where
-  pure : A → IOTree I O A
-  ask  : O → (I → ∞IOTree I O A) → IOTree I O A
+record ∞Tree (I O : Set) (A : Set) : Set
+data Tree (I O : Set) (A : Set) : Set where
+  pure     : A → Tree I O A
+  interact : O → (I → ∞Tree I O A) → Tree I O A
 
-record ∞IOTree I O A where
+record ∞Tree I O A where
   coinductive
-  field force : IOTree I O A
+  field force : Tree I O A
 
-open ∞IOTree
+open ∞Tree
 
+untilTrue : ℕ → Tree Bool ⊤ ℕ
+untilTrue steps = interact _ reply where
 
-untilTrue : ℕ → IOTree Bool ⊤ ℕ
-untilTrue steps = ask _ reply where
-
-  reply : Bool → ∞IOTree Bool ⊤ ℕ
-  reply true  .force = pure steps
+  reply : Bool → ∞Tree Bool ⊤ ℕ
   reply false .force = untilTrue (suc steps)
+  reply true  .force = pure steps
 
-
-open import Data.String.Base using (String)
 
 data Output : Set where
-  Skip : Output
+  Skip  : Output
   Print : String → Output
 
 data Input : Set where
+  Stop : Input
   Line : String → Input
 
-echo : IOTree Input Output ⊤
-echo = ask Skip go where
+echo : Tree Input Output ⊤
+echo = interact Skip reply where
 
-  go : Input → ∞IOTree Input Output ⊤
-  go (Line str) .force = ask (Print str) go
+  reply : Input → ∞Tree Input Output ⊤
+  reply Stop       .force = pure _
+  reply (Line str) .force = interact (Print str) reply
+
+simulate :
+  Tree I O A →
+  (I → Tree S T O) →
+  Tree S T A
+simulate = {!!}
+
+
+open import IO
+
+io : Tree Input Output ⊤ → IO ⊤
+io = {!!}
