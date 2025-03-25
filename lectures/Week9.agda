@@ -6,6 +6,7 @@ open import Relation.Binary.PropositionalEquality as Eq
   using (_≡_; refl; sym; cong; cong₂)
 open Eq.≡-Reasoning
 
+open import Function.Base using (_∘′_; id)
 open import Data.List.Base
 open import Data.List.Properties
 
