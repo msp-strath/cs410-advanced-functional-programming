@@ -20,6 +20,6 @@ in terms of Haskell functions and so you will need `text` installed.
 It should be possible to do it by invoking the following command
 from the terminal:
 
-``shell
+```shell
 cabal install --lib text
 ```
