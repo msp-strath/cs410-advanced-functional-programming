@@ -11,8 +11,6 @@
 ## Assessment and Feedback
 
 The courseworks are submitted by creating a **private** git
-repository (either here or on the departmental gitlab) and
-inviting me.
+repository on the departmental gitlab and inviting me.
 
-1. CW1: Thursday 20th Feb AoE [Well typed circuits](courseworks/1-Circuits)
-2. CW2: Thursday 10th April AoE [Genetic algorithms](courseworks/2-Genetic)
+TBD
