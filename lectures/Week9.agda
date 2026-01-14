@@ -116,31 +116,117 @@ Vec≤-Functor A .Functor.onThen =
   λ n≤p m≤n → funext (Vec.truncate-trans m≤n n≤p)
 
 
-
-
-
-
 -- Forget & free
 
+open import Week7 using (Monoid; HomoMorphism)
 
+postulate
+  monHomEq : {M N : Monoid} → (f g : HomoMorphism M N)
+         → HomoMorphism.function f ≡ HomoMorphism.function g
+         → f ≡ g
 
+monoid-cat : Category
+monoid-cat .Category.Object = Monoid
+monoid-cat .Category.Morphism M N = HomoMorphism M N
+(monoid-cat .Category._then_ f g) .HomoMorphism.function
+  = HomoMorphism.function g ∘′ HomoMorphism.function f
+(Category._then_ monoid-cat f) g .HomoMorphism.mempty-resp rewrite HomoMorphism.mempty-resp f | HomoMorphism.mempty-resp g = refl
+(Category._then_ monoid-cat f) g .HomoMorphism.<>-resp x y rewrite HomoMorphism.<>-resp f x y = HomoMorphism.<>-resp g _ _
+monoid-cat .Category.identity .HomoMorphism.function = id
+monoid-cat .Category.identity .HomoMorphism.mempty-resp = refl
+monoid-cat .Category.identity .HomoMorphism.<>-resp x y = refl
+monoid-cat .Category.then-assoc f g h = monHomEq _ _ refl
+monoid-cat .Category.then-identity f = monHomEq _ _ refl
+monoid-cat .Category.identity-then f = monHomEq _ _ refl
 
+module _ where
 
+  open Monoid
+
+  List-Monoid : Set -> Monoid
+  List-Monoid X .Carrier = List X
+  List-Monoid X ._<>_ xs ys = xs ++ ys
+  List-Monoid X .mempty = []
+  List-Monoid X .<>-assoc [] ys zs = refl
+  List-Monoid X .<>-assoc (x ∷ xs) ys zs =
+    cong (x ∷_) (List-Monoid X .<>-assoc xs ys zs)
+  List-Monoid X .<>-mempty [] = refl
+  List-Monoid X .<>-mempty (x ∷ xs) =
+    cong (x ∷_) (List-Monoid X .<>-mempty xs)
+  List-Monoid X .mempty-<> xs = refl
+
+Forget : Functor monoid-cat SET
+Forget .Functor.onObject = Monoid.Carrier
+Forget .Functor.onMorphism = HomoMorphism.function
+Forget .Functor.onIdentity = refl
+Forget .Functor.onThen = λ f g → refl
+
+Free : Functor SET monoid-cat
+Free .Functor.onObject = List-Monoid
+Free .Functor.onMorphism f .HomoMorphism.function = map f
+Free .Functor.onMorphism f .HomoMorphism.mempty-resp = refl
+Free .Functor.onMorphism f .HomoMorphism.<>-resp [] ys = refl
+Free .Functor.onMorphism f .HomoMorphism.<>-resp (x ∷ xs) ys =
+  cong (_ ∷_) (Free .Functor.onMorphism f .HomoMorphism.<>-resp xs ys)
+Free .Functor.onIdentity = monHomEq _ _ (funext map-id)
+Free .Functor.onThen f g = monHomEq _ _ (funext map-∘)
 
 
 
 
 -- CAT
 
+module _ where
 
+  open Functor
 
+  ID : ∀ {C} → Functor C C
+  ID .onObject = λ z → z
+  ID .onMorphism = λ z → z
+  ID .onIdentity = refl
+  ID .onThen = λ f g → refl
 
+  THEN : ∀ {C D E} → Functor C D → Functor D E → Functor C E
+  THEN F G .onObject = λ x → G .onObject (F .onObject x)
+  THEN F G .onMorphism = λ f → G .onMorphism (F .onMorphism f)
+  THEN {C} {D} {E} F G .onIdentity = begin
+    G .onMorphism (F .onMorphism (Category.identity C))
+      ≡⟨ cong (G .onMorphism) (F .onIdentity) ⟩
+    G .onMorphism (Category.identity D)
+      ≡⟨ G .onIdentity ⟩
+    Category.identity E ∎
+  THEN {C} {D} {E} F G .onThen f g = begin
+    G .onMorphism (F .onMorphism ((C Category.then f) g))
+      ≡⟨ cong (G .onMorphism) (F .onThen f g) ⟩
+    G .onMorphism ((D Category.then F .onMorphism f) (F .onMorphism g))
+      ≡⟨ G .onThen (F .onMorphism f) (F .onMorphism g) ⟩
+    (E Category.then G .onMorphism (F .onMorphism f))
+      (G .onMorphism (F .onMorphism g)) ∎
+{-
+  somewhatEq :
+    ∀ {C} {s t s' t' : Category.Object C} →
+    s ≡ s' → t ≡ t' →
+    (f : Category.Morphism C s t) →
+    (g : Category.Morphism C s' t') →
+    Set
+  somewhatEq refl refl f g = f ≡ g
 
+  functorEq : ∀ {C D} (F G : Functor C D) →
+    (eqOnObject : ∀ {s} → F .onObject s ≡ G .onObject s) →
+    (∀ {s t} (f : Category.Morphism C s t) →
+       somewhatEq eqOnObject eqOnObject (F .onMorphism f) (G .onMorphism f)) →
+    F ≡ G
+  functorEq = {!!}
 
-
-
-
-
+  CAT : Category
+  CAT .Category.Object = Category
+  CAT .Category.Morphism = Functor
+  CAT .Category._then_ = THEN
+  CAT .Category.identity = ID
+  CAT .Category.then-assoc = {!!}
+  CAT .Category.then-identity = {!!}
+  CAT .Category.identity-then = {!!}
+-}
 
 
 
