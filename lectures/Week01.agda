@@ -1,20 +1,14 @@
 module Week01 where
 
-open import Data.String.Base using (String)
-
 ------------------------------------------------------------------------
 -- Administrative Details
-------------------------------------------------------------------------
 
 -- | The Team
-
 -- Guillaume Allais
--- Conor McBride
--- Fredrik Nordvall Forsberg
-
+-- Conor Mc Bride
+-- Fredrik Nordvall-Forsberg
 
 -- | The Events
-
 -- * Lectures
 -- Mondays  | 10am   to 11am | TL565
 -- Tuesdays | 2pm    to 3pm  | TG227
@@ -50,45 +44,66 @@ open import Data.String.Base using (String)
 -- Content starts here
 ------------------------------------------------------------------------
 
+open import Data.String.Base using (String)
+
 ------------------------------------------------------------------------
 -- Lists, partiality
 
 -- List, append
 
+data List (X : Set) : Set where
+  [>]  :               List X
+  _:>_ : X → List X -> List X -- \r is → but ->
 
-
-
+-- in Haskell:
+-- data List x = Nil | Cons x (List x)
 
 -- example (list of strings)
 
+_ : List String
+_ = "hello" :> [>]
 
 -- zap (ugh)
 
-
-
+zap : {S T : Set} -> List (S -> T) -> List S -> List T
+zap [>] ss = [>]
+zap (f :> fs) [>] = [>]
+zap (f :> fs) (s :> ss) = f s :> zap fs ss
 
 -- example where zap goes wrong
 
-
 -- tail
 
+variable S T : Set
+
+tail : List S → List S
+tail [>] = [>]
+tail (_ :> xs) = xs
 
 
 -- head (?!)
 
+head : List S → S
+head [>] = {!!}
+head (x :> _) = x
 
+
+variable A : Set
+{-# NON_TERMINATING #-}
+brexit : A
+brexit = brexit
 
 ------------------------------------------------------------------------
 -- List1, totality
 
 
 -- List1
-
-
+data List1 (X : Set) : Set where
+  _:>_ : X → List X → List1 X
 
 -- head1
-
-
+head1 : List1 S → S
+head1 (x :> _) = x
 
 -- zap1, still unsatisfactory
 
