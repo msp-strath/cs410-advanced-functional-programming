@@ -24,6 +24,9 @@ open import Data.String.Base using (String)
 --
 -- Help-me-install-Agda lab today after this lecture in LT1201.
 
+-- * Teams
+-- https://teams.microsoft.com/l/team/19%3A8Gl1lZT6PtpIEz26mwSB2cCU9hk33ZBdSLAXnDTKxsI1%40thread.tacv2/conversations?groupId=61b05fe6-8db1-4426-81f2-a2da413c5be8&tenantId=631e0763-1533-47eb-a5cd-0457bee5944e
+
 
 -- | Assessment
 
