@@ -105,35 +105,93 @@ data List1 (X : Set) : Set where
 head1 : List1 S → S
 head1 (x :> _) = x
 
+------------------------------------------------------------------------
+-- OMP
+-- Emacs key combinations:
+-- https://agda.readthedocs.io/en/v2.8.0/tools/emacs-mode.html#notation-for-key-combinations
+
 -- zap1, still unsatisfactory
 
-
+zap1 : List1 (S → T) → List1 S → List1 T
+zap1 (f :> fs) (s :> ss) = (f s) :> (zap fs ss)
 
 ------------------------------------------------------------------------
 -- ListN, invariant-aware
 
 -- Nat, _+_
-
+data Nat : Set where
+  zero : Nat
+  succ : Nat → Nat
 
 -- example
 
+three : Nat
+three = succ (succ (succ zero))
 
 -- variables of type Nat
 
-
+variable m n p : Nat
 
 -- ListN
 
+infixr 5 _:>_
+
+-- data List  (X : Set) :       Set where
+-- invariant: the Nat index is the length of the list
+data    ListN (X : Set) : Nat → Set where
+  [>]  :                          ListN X zero
+  _:>_ : ∀ {n} → X → ListN X n -> ListN X (succ n)
+     -- ∀ {n} is the same as {n : _} →
+
+_ : ListN String three
+_ = "hello" :> " " :> "world" :> [>]
+
 -- headN
+
+headN : forall {X n} -> ListN X (succ n) -> X
+headN (x :> xs) = x
+
+tailN : forall {X n} -> ListN X (succ n) -> ListN X n
+tailN (x :> xs) = xs
 
 -- zapN
 
+zapN : forall {S T n} -> ListN (S -> T) n -> ListN S n -> ListN T n
+zapN [>] [>] = [>]
+zapN (f :> fs) (s :> ss) = f s :> zapN fs ss
+
+infixr 5 _+_
+_+_ : Nat → Nat → Nat
+zero     + n = n
+(succ m) + n = succ (m + n)
 
 -- appendN
 -- what's its type?
+appendN : ListN S m → ListN S n → ListN S (m + n)
+appendN [>]       ys = ys
+appendN (x :> xs) ys = x :> appendN xs ys
 
+-- another definition of addition
+infixr 5 _+'_
+_+'_ : Nat → Nat → Nat
+m +' zero   = m
+m +' succ n = succ (m +' n)
+
+-- appendN' is not appendN
+appendN' : ListN S m → ListN S n → ListN S (m +' n)
+appendN' xs [>]       = xs
+appendN' xs (y :> ys) = y :> (appendN' xs ys)
+
+-- Pairs of things
+record _×_ (A B : Set) : Set where
+  constructor _,_
+  field
+    fst : A
+    snd : B
 
 -- unAppending
+unAppending : ListN S (m + n) → ListN S m × ListN S n
+unAppending {m = m} = {!!}
 
 -- record _×_ (+ similar-looking data Pair)
 
