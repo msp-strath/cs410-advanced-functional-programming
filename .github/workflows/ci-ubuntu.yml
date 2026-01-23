@@ -26,12 +26,12 @@ jobs:
 
       # Check 0-Install.agda
       - run: 'echo "ci" | make'
-        working-directory: courseworks/0-Install
+        working-directory: archives/2025/courseworks/0-Install
 
       # Check 1-Circuits.agda
       - run: make
-        working-directory: courseworks/1-Circuits
+        working-directory: archives/2025/courseworks/1-Circuits
 
       # Check 2-Genetic.agda
       - run: make ci
-        working-directory: courseworks/2-Genetic
+        working-directory: archives/2025/courseworks/2-Genetic
