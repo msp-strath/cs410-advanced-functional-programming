@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module Week01 where
 
 ------------------------------------------------------------------------
@@ -191,12 +193,7 @@ record _×_ (A B : Set) : Set where
 
 -- unAppending
 unAppending : ListN S (m + n) → ListN S m × ListN S n
-unAppending {m = m} = {!!}
-
--- record _×_ (+ similar-looking data Pair)
-
-
--- example
-
-
--- splitN, the unAppending
+unAppending {m = zero}   xs = [>] , xs
+unAppending {m = succ m} (x :> xs) =
+  let (prefix , suffix) = unAppending xs in
+  (x :> prefix) , suffix

@@ -10,7 +10,7 @@ module Week02 where
 
 ---------------------------------------------------------
 -- Look back at unAppending / splitN
-
+-- open import Week01
 
 ---------------------------------------------------------
 -- Today: Equality & Proofs
@@ -22,8 +22,9 @@ module Week02 where
 -- Propositional equality
 
 
-
 -- DEFINE equality
+data _≡_ {A : Set} (a : A) : A → Set where
+  refl : a ≡ a
 
 
 -- DEFINE unit tests:
@@ -31,12 +32,26 @@ module Week02 where
 -- 17 ≡ 42 does not have an element
 
 open import Data.Nat.Base using (ℕ; zero; suc; _+_)
+open import Data.String.Base using (String)
 
+_ : 5 ≡ (3 + 2)
+_ = refl
 
+open import Relation.Nullary using (¬_)
+_ : ¬ (17 ≡ 42)
+_ = λ ()
 
+{-
+data _≅_ {A : Set} (a : A) : {B : Set} → B → Set where
+  refl : a ≅ a
+
+_ : ¬ (17 ≅ "hello")
+_ = λ ()
+-}
 
 -- PROVE cong(ruence)
-
+cong : {S T : Set}(f : S -> T){x y : S} -> x ≡ y -> f x ≡ f y
+cong f {x} {.x} refl = refl
 
 
 
@@ -45,11 +60,11 @@ open import Data.Nat.Base using (ℕ; zero; suc; _+_)
 
 
 
--- PROVE that 1 is the neutral element for (ℕ, _+_)
+-- PROVE that 1 + n ≡ n + 1
 -- Pro-tip: to know how to type the unicode character under
 -- your cursor in emacs, use `C-u C-x =`.
 
--- +-identityʳ : (n : ℕ) → (n + 1) ≡ (1 + n)
+-- +-1 : (n : ℕ) → (n + 1) ≡ (1 + n)
 
 
 
