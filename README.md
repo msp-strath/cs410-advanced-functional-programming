@@ -11,6 +11,11 @@
 We have 2 more slots in case you need extra labs to ask questions.
 So don't hesitate to request them!
 
+We upload a (best effort) recording of the lectures on the
+[youtube's playlist for the course](https://www.youtube.com/playlist?list=PLjPpkiIsfkBPT97FRYM1olAbR4ndABbWf).
+
+You can also access [last year's videos](https://www.youtube.com/playlist?list=PLjPpkiIsfkBMOOtcFX3D6EvcUcdNHRxkx)
+
 ## Assessment and Feedback
 
 The courseworks are submitted by creating a **private** git
