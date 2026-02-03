@@ -1,3 +1,5 @@
+{-# OPTIONS --postfix-projections #-}
+
 ------------------------------------------------------------------------
 -- WEEK 3
 ------------------------------------------------------------------------
@@ -49,7 +51,7 @@ _≡ᴸ_ {ℓ = ℓ} {A = A} x y = (P : A → Set ℓ) → P x → P y
 
 variable
   ℓ : Level
-  A : Set ℓ
+  A B C : Set ℓ
   x y : A
 
 toLeibniz : x ≡ y → x ≡ᴸ y
@@ -140,54 +142,68 @@ _ : Not (Implies (0 ≡ 0) ⊥)
 _ = dni refl
 
 -- DISCUSS Not (Implies A B) vs. a more constructive formulation
+
+-- NotImplies : Set → Set → Set
 -- NotImplies A B = {!A ∧ (Not B)!}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ------------------------------------------------------------------------
 -- Conjunction
---    A         B
+--    A       B       -- Assuming these     | It's enough to prove those
 -- -----------------
---       A ∧ B
+--      A ∧ B         -- We can prove this  | If we want to prove this
 
 -- DEFINE And
+record _∧_ (A B : Set) : Set where
+  constructor _,_
+  field
+    fst : A
+    snd : B
+open _∧_
 
 -- DEFINE diagonal : A → A ∧ A
+diagonal : A → A ∧ A
+diagonal = λ z → z , z
 
 -- DEFINE swap : A ∧ B → B ∧ A
+swap : A ∧ B → B ∧ A
+swap = λ z → snd z , fst z
 
+swap' : A ∧ B → B ∧ A
+swap' (a , b) = b , a
+
+swap'' : A ∧ B → B ∧ A
+swap'' (a , b) .fst = b
+swap'' (a , b) .snd = a
 
 -- Refutations
 -- DEFINE NotImplies
+NotImplies : Set → Set → Set
+NotImplies A B = A ∧ (Not B)
 
 -- PROVE NotImplies (0 ≡ 0) ⊥
 
+¬¬0≡0 : NotImplies (0 ≡ 0) ⊥
+¬¬0≡0 .fst = refl
+¬¬0≡0 .snd ()
 
 
 ------------------------------------------------------------------------
 -- Disjunction
 
+--  A             B
+-- -------   -------
+--  A ∨ B     A ∨ B
+
 -- DEFINE Or
+data _∨_ (A B : Set) : Set where
+  inl : A    → A ∨ B
+  inr :    B → A ∨ B
 
 -- PROVE distribute : A ∧ (B ∨ C) → (A ∧ B) ∨ (A ∧ C)
-
+distribute : A ∧ (B ∨ C) → (A ∧ B) ∨ (A ∧ C)
+distribute (a , inl b) = inl (a , b)
+distribute (a , inr c) = inr (a , c)
 
 
 ------------------------------------------------------------------------
@@ -197,7 +213,59 @@ _ = dni refl
 
 -- eta equality?
 
+data ⊤d : Set where dull : ⊤d
 
+same : (a b : ⊤d) -> a ≡ b
+same dull dull = refl
+
+record ⊤ : Set where
+  constructor <>
+
+same' : (a b : ⊤) -> a ≡ b
+same' a b = refl
+
+boring : ⊤ ∧ ⊤
+boring = _
+
+η-function : (f : A → B) → f ≡ (λ x → f x)
+η-function f = refl
+
+η-swap : (p : A ∧ B) → swap (swap p) ≡ p
+η-swap p = refl
+
+η-swap' : (p : A ∧ B) → swap' (swap' p) ≡ p
+η-swap' p = refl
+
+open import Function.Base using (id; _∘_)
+open import Relation.Binary.PropositionalEquality using (module ≡-Reasoning)
+-- One of the lucky cases
+η-pair : (swap ∘ swap) ≡ id {A = A ∧ B}
+η-pair = refl
+
+η-pair' : (swap ∘ swap) ≡ id {A = A ∧ B}
+η-pair' = let open ≡-Reasoning in
+  begin
+  swap ∘ swap             ≡⟨⟩
+  (λ x → (swap ∘ swap) x) ≡⟨⟩
+  (λ x → swap (swap x))   ≡⟨⟩
+  (λ x → x)               ≡⟨⟩
+  id                      ∎
+
+
+-- Jargon
+--
+-- 1. α-equality
+--   Changing names without changing the meaning
+--   e.g. (λ x → x) ≡ (λ y → y)
+--
+-- 2. β-equality
+--   Computing a little (changing the structure, without changing the meaning)
+--   e.g. (λ x → x) y ≡ y
+--
+-- 3. η-equality
+--   Canonicity rules (changing the structure to a "more standard" one
+--   without changing the meaning)
+--   e.g. (λ x → f x) ≡ f
 
 
 ------------------------------------------------------------------------
@@ -205,7 +273,13 @@ _ = dni refl
 
 -- DEFINE LEM
 
+LEM : Set → Set
+LEM A = A ∨ Not A
+
 -- DISCUSS LEM & ¬¬LEM
+wlem : Not (Not (LEM A))
+wlem ¬lem = ¬lem (inr (\ a -> ¬lem (inl a)))
+
 
 
 open import Function.Base using (case_of_)
