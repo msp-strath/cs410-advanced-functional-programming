@@ -127,6 +127,14 @@ parity? = {!!}
 
 
 
+-----------------------------------------------------------------------
+-- Announcement: interesting online seminar
+-- The Cognitive and Human Factors of Formal Methods
+-- by Shriram Krishnamurthi from Brown University
+-- (zoom link on Teams)
+-- https://informatics.ed.ac.uk/lfcs/lfcs-seminar-tuesday-10-february-shriram-krishnamurthi
+
+
 
 
 -----------------------------------------------------------------------
