@@ -123,9 +123,18 @@ _ = refl
 
 
 parity? : (m : ℕ) → ∃ (λ (b : Bool) → Parity b m)
-parity? = {!!}
+parity? zero = false , even0
+parity? (suc m) with parity? m
+... | false , prf = true , oddS prf
+... | true  , prf = false , evenS prf
+
+not-both : ∀ {m} → Even m → Odd m → ⊥
+not-both even0     ()
+not-both (evenS p) (oddS q) = not-both q p
 
 
+_ : parity? 10 ≡ (false , _)
+_ = refl
 
 -----------------------------------------------------------------------
 -- Announcement: interesting online seminar
@@ -146,8 +155,19 @@ open import Data.Product.Base using (∃)
 open import Function.Base using (_$_)
 
 -- DISCUSS Markov's Principle
+{-# NON_TERMINATING #-}
+markov : {P : ℕ → Set} →
+         (∀ n → Dec (P n)) →
+         (¬ (∀ n → ¬ (P n))) →
+         ∃ P
+markov {P} P? npn = loop 0 where
 
+  loop : ℕ → ∃ P
+  loop i with P? i
+  ... | yes pi = i , pi
+  ... | no ¬pi = loop (suc i)
 
+open import Function.Base using (case_of_)
 
 
 -----------------------------------------------------------------------
@@ -157,18 +177,45 @@ open import Function.Base using (_$_)
 open import Data.Unit
 
 
-{-
 isYes : Dec A → Set
--}
+isYes (yes _) = ⊤
+isYes (no _)  = ⊥
 
 
--- magic : (d : Dec A) {_ : isYes d} → A
--- magic (yes p) = p
+magic : (d : Dec A) {_ : isYes d} → A
+magic (yes p) = p
 
-{-
 isEven : (n : ℕ) → {_ : isYes (even? n)} → Even n
 isEven n {constraint} with even? n
 ... | yes evenn = evenn
+
+isOdd : (n : ℕ) → {_ : isYes (odd? n)} → Odd n
+isOdd n {p} = magic (odd? n) {p}
+
+anOdd : ℕ
+anOdd = proj₁ (markov odd? (λ nodd → case nodd 11 of λ f → f (isOdd 11)))
+
+open import Data.Nat.Base using (_*_)
+
+{-
+danger : ⊥ → ∃ (λ n → n * 0 ≡ 1)
+danger abs = markov (λ n → nat-eq-dec (n * 0) 1) (case abs of λ ())
+-}
+
+{-
+_ : Even 11
+_ = isEven 11 {{!!}}
+-}
+
+
+
+
+{-
+
+
+
+
+
 -}
 
 -- _ : Even 100
@@ -192,20 +239,55 @@ _ = isEven 101
 -- All vs. Any
 
 
+open import Data.List.Base using (List; []; _∷_)
+
+variable x y z : A
+variable xs ys zs : List A
+
+Pred : Set → Set₁
+Pred A = A → Set
+
 -- DEFINE All
+data All {A : Set} (P : Pred A) : Pred (List A) where
+  []  : ------------------------
+             All P []
+
+  _∷_ :     P x →        All P xs →
+       ---------------------------------------
+              All P (x ∷ xs)
+
+_ : All Even (0        ∷ 2        ∷ 4 ∷ [])
+_ =    isEven 0 ∷ isEven 2 ∷ isEven 4 ∷ []
 
 -- EXAMPLES All IsEven / All (Vec ℕ)
 
-
+Spreadsheet : {R C : Set}(Cell : R -> C -> Set) -> List R -> List C -> Set
+Spreadsheet Cell rs cs = All (\ r -> All (\ c -> Cell r c) cs) rs
 
 open import Data.Vec using (Vec; []; _∷_)
 
 
 -- DEFINE Any
 
+data Any (P : Pred A) : Pred (List A) where
+  here :    P x →
+         -------------------
+           Any P (x ∷ xs)
+
+  there :    Any P xs →
+          ----------------
+            Any P (x ∷ xs)
+
+_ : Any Even (0 ∷ 3 ∷ 4 ∷ 7 ∷ [])
+_ = there (there (here (isEven 4)))
+
+
+
+
+
+
 
 -- DISCUSS search
-{-
 search : {P : A → Set} →
          (∀ n → Dec (P n)) →   -- we can decide the predicate P
          (xs : List A) →
@@ -213,4 +295,3 @@ search : {P : A → Set} →
          -- ¬ (¬ Any P xs) →
          Any P xs              -- so it must be true of at least one of them
 search = {!!}
--}
