@@ -38,16 +38,34 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 ---------------------------------------------------------------------------
 
 -- Define Expr (using at least 2 base types)
+data Expr : Set where
+  aNat  : ℕ → Expr
+  aBool : Bool → Expr
+  add   : (m n : Expr) → Expr
+  ifte  : (b : Expr) (l r : Expr) → Expr
 
-{-
+aZero : Expr
+aZero = aNat 0
+
+aTrue : Expr
+aTrue = aBool true
+
 pattern _+E_ a b = add a b
 pattern ifE_then_else_ b t e = ifte b t e
 
 infixl 4 _+E_
 infix 0 ifE_then_else_
--}
 
 -- Examples (name them so we can reuse them later on)
+
+aGoodSum : Expr
+aGoodSum = aZero +E (ifE aTrue then aNat 2 else aNat 1)
+
+aBadSum : Expr
+aBadSum = aZero +E aTrue
+
+aBadIF : Expr
+aBadIF = ifE aZero then aZero else aZero
 
 ---------------------------------------------------------------------------
 -- Evaluation
@@ -56,13 +74,47 @@ infix 0 ifE_then_else_
 -- A value is either a number or a Boolean.
 -- DEFINE Val
 
-
-
+data Val : Set where
+  aNat  : ℕ → Val
+  aBool : Bool → Val
 
 -- Now we can Maybe produce a value from an expression; we return
 -- `nothing` if things don't make sense.
 
+getNat : Val → Maybe ℕ
+getNat (aNat n) = just n
+getNat _ = nothing
+
+getBool : Val → Maybe Bool
+getBool (aBool b) = just b
+getBool _ = nothing
+
+_+V_ : Maybe Val → Maybe Val → Maybe Val
+mv +V mw = do
+  v ← mv
+  w ← mw
+  m ← getNat v
+  n ← getNat w
+  just (aNat (m + n))
+
+ifV_then_else_
+  : Maybe Val
+  → {- lazy -} Maybe Val
+  → {- lazy -} Maybe Val
+  → Maybe Val
+ifV mv then l else r = do
+  v ← mv
+  b ← getBool v
+  if b then l else r
+
 -- DEFINE eval
+eval : Expr → Maybe Val
+eval (aNat n) = just (aNat n)
+eval (aBool b) = just (aBool b)
+eval (     m +E      n) =
+      eval m +V eval n
+eval (ifE      b then      l else      r) =
+      ifV eval b then eval l else eval r
 
 -- REFACTOR eval
 
@@ -70,6 +122,20 @@ infix 0 ifE_then_else_
 
 
 -- examples
+_ : eval aZero ≡ just (aNat 0)
+_ = refl
+
+_ : eval aGoodSum ≡ just (aNat 2)
+_ = refl
+
+_ : eval aBadSum ≡ nothing
+_ = refl
+
+_ : eval aBadIF ≡ nothing
+_ = refl
+
+_ : eval (ifE aTrue then aZero else aBadSum) ≡ just (aNat 0)
+_ = refl
 
 -- tests
 
@@ -82,14 +148,31 @@ infix 0 ifE_then_else_
 
 -- DEFINE Ty
 
+data Ty : Set where
+  `Nat : Ty
+  `Bool : Ty
+
 -- We now annotate each expression with their expected type. Note that
 -- if-then-else works for arbitrary types of the branches, as long as
 -- they coincide.
 
 -- DEFINE TExpr
 
+data TExpr : Ty → Set where
+  aNat  : ℕ → TExpr `Nat
+  aBool : Bool → TExpr `Bool
+  add   : (m n : TExpr `Nat) → TExpr `Nat
+  ifte  : ∀ {T} → (b : TExpr `Bool) (l r : TExpr T) → TExpr T
+
 -- EXAMPLES
 
+aGoodSumBis : TExpr `Nat
+aGoodSumBis = add (aNat zero) (aNat 1)
+
+{-
+aBadSumBis : TExpr `Nat
+aBadSumBis = add (aNat zero) (aBool true)
+-}
 
 ---------------------------------------------------------------------------
 -- Evaluation
@@ -99,10 +182,20 @@ infix 0 ifE_then_else_
 -- expression.
 
 -- DEFINE TVal
+TVal : Ty → Set
+TVal `Nat  = ℕ
+TVal `Bool = Bool
 
 
 -- DEFINE teval : forall {T} -> TExpr T -> TVal T
+teval : forall {T} -> TExpr T -> TVal T
+teval (aNat m) = m
+teval (aBool b) = b
+teval (add m n) = teval m + teval n
+teval (ifte b l r) = if teval b then teval l else teval r
 
+_ : teval aGoodSumBis ≡ 1
+_ = refl
 
 
 --------------------------------------------------------------------------
