@@ -205,9 +205,59 @@ _ = refl
 -- It is easy to forget the type of a typed expression.
 
 -- DEFINE ∣_∣ : ∀ {t} → TExpr t -> Expr
+-- This is not a |, this is a \|
+∣_∣ : ∀ {t} → TExpr t -> Expr
+∣ aNat n     ∣ = aNat n
+∣ aBool b    ∣ = aBool b
+∣ add m n    ∣ = add ∣ m ∣ ∣ n ∣
+∣ ifte b l r ∣ = ifte (∣ b ∣) (∣ l ∣) (∣ r ∣)
+
+-- STATE PROVE erasure correctness wrt evaluation
+
+∣_∣v : ∀ {t} → TVal t → Val
+∣_∣v {`Nat}  v = aNat v
+∣_∣v {`Bool} v = aBool v
 
 
--- STATE PROVE erasure correctness
+if-cong : ∀ {A B : Set} →
+  (f : A → B) → ∀ b l r →
+  (if b then f l else f r) ≡ f (if b then l else r)
+if-cong f false l r = refl
+if-cong f true l r = refl
+
+∣∣-correct : ∀ {t} (e : TExpr t) →
+             eval ∣ e ∣ ≡ just ∣ teval e ∣v
+∣∣-correct (aNat n)     = refl
+∣∣-correct (aBool b)    = refl
+∣∣-correct (add m n)
+{- long form "rewrite"
+  with eval ∣ m ∣ | ∣∣-correct m
+... | w | refl = {!!}
+-}
+  rewrite ∣∣-correct m
+  rewrite ∣∣-correct n
+  = refl
+∣∣-correct (ifte b l r)
+{- cunning solution
+  with eval ∣ b ∣ | teval b | ∣∣-correct b
+... | u | false | refl = ∣∣-correct r
+... | u | true | refl = ∣∣-correct l
+-}
+  rewrite ∣∣-correct b
+  rewrite ∣∣-correct l
+  rewrite ∣∣-correct r
+{- brutally using with
+  with (teval b)
+... | false = refl
+... | true = refl
+-}
+-- library-based solution
+  = if-cong (λ v → just ∣ v ∣v) (teval b) (teval l) (teval r)
+
+
+
+
+
 
 
 
@@ -216,6 +266,27 @@ _ = refl
 
 -- DEFINE record Welltyped (e : Expr) : Set where
 
+data ILike : Expr -> Set where
+  iLikeTypes : (T : Ty)(e : TExpr T) -> ILike ∣ e ∣
+
+tryLiking : (e : Expr) -> Maybe (ILike e)
+tryLiking (aNat n) = just (iLikeTypes `Nat (aNat n))
+tryLiking (aBool b) = just (iLikeTypes `Bool (aBool b))
+tryLiking (n +E m)
+  with tryLiking n | tryLiking m
+... | just (iLikeTypes `Nat n') | just (iLikeTypes `Nat m')
+      = just (iLikeTypes `Nat (add n' m'))
+... | _ | _ = nothing
+tryLiking (ifE b then l else r)
+  with tryLiking b | tryLiking l | tryLiking r
+... | just (iLikeTypes `Bool b') | just (iLikeTypes `Nat l') | just (iLikeTypes `Nat r') = just (iLikeTypes `Nat (ifte b' l' r'))
+... | just (iLikeTypes `Bool b') | just (iLikeTypes `Bool l') | just (iLikeTypes `Bool r') = just (iLikeTypes `Bool (ifte b' l' r'))
+... | _ | _ | _ = nothing
+
+infer : Expr → Maybe Ty
+infer e with tryLiking e
+... | just (iLikeTypes ty _) = just ty
+... | _ = nothing
 
 -- STATE and PROVE type uniqueness
 
