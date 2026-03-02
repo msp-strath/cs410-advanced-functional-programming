@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module Week06 where
 
 open import Data.Unit.Base using (⊤)
@@ -130,7 +128,7 @@ _ = ((_ , false) , 0)
 
 
 lookup : forall {T} → Var Γ T → (CVal Γ → TVal T)
-lookup zero    (_ , v) = v
+lookup zero    (_   , v) = v
 lookup (suc x) (env , _) = lookup x env
 
 -- DEFINE teval
@@ -220,7 +218,11 @@ _ = refl
 open import Relation.Binary.PropositionalEquality using (module ≡-Reasoning; cong; cong₂)
 
 
-module _ (funExt : ∀ {A B : Set} (f g : A → B) → (∀ x → f x ≡ g x) → f ≡ g) where
+-- intention: being deliberate
+-- intension: being syntactic
+-- extension: being behavioural
+
+module _ (funExt : ∀ {A B : Set} (f g : A → B) → (∀ x → (f x ≡ g x)) → f ≡ g) where
 
   correct-depth-first
     : {tr : Transformation}
@@ -245,7 +247,8 @@ module _ (funExt : ∀ {A B : Set} (f g : A → B) → (∀ x → f x ≡ g x) �
   correct-depth-first ctr (var x) env = ctr (var x) env
   correct-depth-first {tr = tr} ctr (lam t) env = let open ≡-Reasoning in begin
     (λ s → teval t (env , s))
-     ≡⟨ {!!} ⟩
+     ≡⟨ funExt (λ s → teval t (env , s)) (λ s → teval (depth-first tr t) (env , s))
+          (λ s → correct-depth-first ctr t (env , s)) ⟩
     (λ s → teval (depth-first tr t) (env , s))
       ≡⟨ ctr (lam (depth-first tr t)) env ⟩
     teval (tr (lam (depth-first tr t))) env
