@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module Week06 where
 
 open import Data.Unit.Base using (⊤)

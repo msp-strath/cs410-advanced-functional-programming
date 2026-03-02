@@ -16,78 +16,21 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 
 
 ------------------------------------------------------------------------
--- Our syntax & semantics
+-- Our syntax, semantics, and transformations
 
-data Ty : Set where
-  `Bool `Nat : Ty
-  `Fun : (S T : Ty) → Ty
+-- Just to show we're not pulling your leg: reuse last week's definitions
 
-variable
-  σ τ : Ty
-
-infixl 4 _-,_
-data Ctx : Set where
-  []   : Ctx
-  _-,_ : Ctx → Ty → Ctx
-
-variable
-  Γ Δ : Ctx
-
-data Var : Ctx → Ty → Set where
-  -- e : Var [] σ : no variables in the empty context!
-  zero :           Var (Γ -, σ) σ
-  suc  : Var Γ σ → Var (Γ -, τ) σ
-
-data TExpr (Γ : Ctx) : Ty → Set where
-  aNat  : ℕ → TExpr Γ `Nat
-  aBool : Bool → TExpr Γ `Bool
-  add   : (m n : TExpr Γ `Nat) → TExpr Γ `Nat
-  ifte  : ∀ {T} → (b : TExpr Γ `Bool) (l r : TExpr Γ T) → TExpr Γ T
-  var   : ∀ {T} → Var Γ T → TExpr Γ T
-  lam   : ∀ {S T} → TExpr (Γ -, S) T → TExpr Γ (`Fun S T)
-  app   : ∀ {S T} → TExpr Γ (`Fun S T) →
-                    (TExpr Γ S → TExpr Γ T)
-
-TVal : Ty → Set
-TVal `Nat  = ℕ
-TVal `Bool = Bool
-TVal (`Fun S T) = TVal S → TVal T
-
-CVal : Ctx → Set
-CVal [] = ⊤
-CVal (Γ -, S) = CVal Γ × TVal S
-
-
-lookup : forall {T} → Var Γ T → (CVal Γ → TVal T)
-lookup zero    (_ , v) = v
-lookup (suc x) (env , _) = lookup x env
-
-teval : forall {Γ T} -> TExpr Γ T -> (CVal Γ → TVal T)
-teval (aNat m) env = m
-teval (aBool b) env = b
-teval (add m n) env = teval m env + teval n env
-teval (ifte b l r) env = if teval b env then teval l env else teval r env
-teval (var x) env = lookup x env
-teval (lam b) env = λ s → teval b (env , s)
-teval (app f t) env = (teval f env) (teval t env)
-
-------------------------------------------------------------------------
--- Transformations
-
-Transformation : Set
-Transformation = ∀ {Γ T} → TExpr Γ T → TExpr Γ T
-
-addEval : Transformation
-addEval (add (aNat m) (aNat n)) = aNat (m + n)
-addEval t = t
-
-depth-first : Transformation -> Transformation
-depth-first tr (add s t) = tr (add (depth-first tr s) (depth-first tr t))
-depth-first tr (ifte b t e) = tr (ifte (depth-first tr b) (depth-first tr t) (depth-first tr e))
-depth-first tr (lam t) = tr (lam (depth-first tr t))
-depth-first tr (app f s) = tr (app (depth-first tr f) (depth-first tr s))
-depth-first tr t = tr t
-
+open import Week06 using
+  ( -- syntax
+    Ty; `Bool; `Nat; `Fun; σ; τ
+  ; Ctx; []; _-,_; Γ; Δ
+  ; Var; zero; suc
+  ; TExpr; aNat; aBool; add; ifte; var; lam; app
+    -- semantics
+  ; TVal; CVal; lookup; teval
+    -- transformations
+  ; Transformation; addEval; depth-first
+  )
 
 ------------------------------------------------------------------------
 -- Program equivalence
