@@ -60,13 +60,21 @@ foldr0 : {X T : Set} -> (X -> T -> T) -> T -> List X -> T
 foldr0 cons nil [] = nil
 foldr0 cons nil (x ∷ xs) = cons x (foldr0 cons nil xs)
 
+-- swapping the order of arguments
 foldr1 : {X T : Set} -> (X -> T -> T) -> List X -> T -> T
 foldr1 cons [] nil = nil
 foldr1 cons (x ∷ xs) nil = cons x (foldr1 cons xs nil)
 
+-- noticing that nil is just being threaded throughout
 foldr2 : {X T : Set} -> (X -> T -> T) -> List X -> T -> T
 foldr2 cons [] = id
 foldr2 cons (x ∷ xs) = cons x ∘′ foldr2 cons xs
+
+
+-- noticing that this is "just" turning a list of X into
+-- a list of (endo T) and then squashing it using the fact
+-- endo is a monoid.
+-- Let's generalise!
 
 -- anonymous module
 module _ {A : Set} (m : Monoid A) where
@@ -98,8 +106,9 @@ module _ {A : Set} (m : Monoid A) where
 
 
 
-
-foldr3 : {X T : Set} -> (X -> T -> T) -> List X -> T -> T
+-- going back to our prior observation: foldr3 is just
+-- foldMap for endo
+foldr3 : {X T : Set} -> (X -> (T -> T)) -> List X -> (T -> T)
 foldr3 = foldMap (endo _)
 
 
