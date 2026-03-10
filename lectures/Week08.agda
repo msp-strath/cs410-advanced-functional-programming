@@ -76,15 +76,25 @@ foldr2 cons (x ∷ xs) = cons x ∘′ foldr2 cons xs
 -- endo is a monoid.
 -- Let's generalise!
 
+
+
+---------------------------------------------------------------------------
+-- Parametrised proofs
+---------------------------------------------------------------------------
+
+
 -- anonymous module
 module _ {A : Set} (m : Monoid A) where
 
   open Monoid m
 
+  -- DEFINE squish/crush/ whatever you want to call it
   foldMap : {X : Set} -> (X -> A) -> List X -> A
   foldMap f [] = neu
   foldMap f (x ∷ xs) = f x <> foldMap f xs
 
+
+  -- PROVE it is a monoid homomorphism
   foldMap-[] : {X : Set} (f : X → A) → foldMap f [] ≡ neu
   foldMap-[] f = refl
 
@@ -116,27 +126,18 @@ foldr3 = foldMap (endo _)
 
 
 
----------------------------------------------------------------------------
--- Parametrised proofs
----------------------------------------------------------------------------
-
--- DEFINE squish/crush/ whatever you want to call it
-
-
-
-
-
--- PROVE it is a monoid homomorphism
-
-
-
 -- DEFINE the acc-based version, prove it is equivalent
+
+
+
 
 ---------------------------------------------------------------------------
 -- Homomorphisms
 ---------------------------------------------------------------------------
 
 -- DEFINE Monoid Homomorphisms
+
+-- EXAMPLE
 
 -- PROVE they commute with squishing
 
