@@ -174,6 +174,10 @@ module _ {SC TC : Set}(S : Monoid SC)(T : Monoid TC) where
       neu-neu : hom-fun S.neu ≡ T.neu
       <>-<>   : forall s0 s1 -> hom-fun (s0 S.<> s1) ≡ hom-fun s0 T.<> hom-fun s1
 
+  open _=Monoid>_
+  postulate
+    monHomEq : {f g : _=Monoid>_} -> f .hom-fun ≡ g .hom-fun -> f ≡ g
+
 -- EXAMPLE
 
 module _ {X : Set} (m : Monoid X) where

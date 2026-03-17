@@ -5,10 +5,11 @@ open import Relation.Binary.PropositionalEquality
 
 open import Function using (_∘′_; id)
 
-open import Week08 using (Monoid; _=Monoid>_)
+open import Week08 using (Monoid; _=Monoid>_; monHomEq)
 
 -- 🀶🁘🁐 -- OK!
 -- 🁋🀳🁁 -- not OK!
+--  ^^--  mismatch
 -- A category is a fancy monoid:
 --  - It has a type of objects
 --  - It has a type of morphisms with a source & target object
@@ -28,52 +29,54 @@ open import Week08 using (Monoid; _=Monoid>_)
 open import Level using (Level; _⊔_; 0ℓ)
 variable c ℓ : Level
 
--- DEFINE
+-- DEFINE Category
 record Category c ℓ : Set (Level.suc (c ⊔ ℓ)) where
   field
     -- types
     O : Set c
     M : O → O → Set ℓ
     -- operations
-    identity : ∀ {o} → M o o
-    _andThen_ : ∀ {s m t} → M s m → M m t → M s t
+    identity  {- like neu  -} : ∀ {o} → M o o
+    _andThen_ {- like _<>_ -} : ∀ {s m t} → M s m → M m t → M s t
     -- laws
     andThen-assoc    : ∀ {s lm rm t} (f : M s lm) (g : M lm rm) (h : M rm t) →
                        (f andThen g) andThen h ≡ f andThen (g andThen h)
     identity-andThen : ∀ {s t} {m : M s t} → identity andThen m ≡ m
     andThen-identity : ∀ {s t} {m : M s t} → m andThen identity ≡ m
 
-open Category
+module _ where
 
-Agda : Category (Level.suc 0ℓ) 0ℓ
-Agda .O = Set₀
-Agda .M S T = S → T
-Agda .identity = λ x → x
-Agda ._andThen_ = λ f g x → g (f x)
-Agda .andThen-assoc = λ f g h → refl
-Agda .identity-andThen = refl
-Agda .andThen-identity = refl
+ open Category
 
-open import Data.Nat.Base using (ℕ; _≤_)
-open import Data.Nat.Properties using (≤-refl; ≤-trans;  ≤-irrelevant)
+ Agda : Category (Level.suc 0ℓ) 0ℓ
+ Agda .O = Set₀
+ Agda .M S T = S → T
+ Agda .identity = λ x → x
+ Agda ._andThen_ = λ f g x → g (f x)
+ Agda .andThen-assoc = λ f g h → refl
+ Agda .identity-andThen = refl
+ Agda .andThen-identity = refl
 
-discrete : (A : Set ℓ) → Category ℓ ℓ
-discrete A .O = A
-discrete A .M m n = m ≡ n
-discrete A .identity = refl
-discrete A ._andThen_ = trans
-discrete A .andThen-assoc refl refl refl = refl
-discrete A .identity-andThen = refl
-discrete A .andThen-identity {m = refl} = refl
+ open import Data.Nat.Base using (ℕ; _≤_)
+ open import Data.Nat.Properties using (≤-refl; ≤-trans;  ≤-irrelevant)
 
-ℕ≤ : Category 0ℓ 0ℓ
-ℕ≤ .O = ℕ
-ℕ≤ .M = _≤_
-ℕ≤ .identity = ≤-refl
-ℕ≤ ._andThen_ = ≤-trans
-ℕ≤ .andThen-assoc = λ _ _ _ → ≤-irrelevant _ _
-ℕ≤ .identity-andThen = ≤-irrelevant _ _
-ℕ≤ .andThen-identity = ≤-irrelevant _ _
+ discrete : (A : Set ℓ) → Category ℓ ℓ
+ discrete A .O = A
+ discrete A .M m n = m ≡ n
+ discrete A .identity = refl
+ discrete A ._andThen_ = trans
+ discrete A .andThen-assoc refl refl refl = refl
+ discrete A .identity-andThen = refl
+ discrete A .andThen-identity {m = refl} = refl
+
+ ℕ≤ : Category 0ℓ 0ℓ
+ ℕ≤ .O = ℕ
+ ℕ≤ .M = _≤_
+ ℕ≤ .identity = ≤-refl
+ ℕ≤ ._andThen_ = ≤-trans
+ ℕ≤ .andThen-assoc = λ _ _ _ → ≤-irrelevant _ _
+ ℕ≤ .identity-andThen = ≤-irrelevant _ _
+ ℕ≤ .andThen-identity = ≤-irrelevant _ _
 
 -- EXAMPLES: (Set, Nat (discrete & ≤), Kleisli for Maybe?)
 
@@ -81,6 +84,8 @@ open import Data.Maybe using (Maybe; nothing; just; _>>=_)
 
 
 module _ (funExt : ∀ {A B : Set} (f g : A → B) → (∀ x → (f x ≡ g x)) → f ≡ g) where
+
+  open Category
 
   Kleisli : Category (Level.suc 0ℓ) 0ℓ
   Kleisli .O = Set
@@ -113,6 +118,8 @@ module _ {A : Set} (m : Monoid A) where
 
   open Monoid m
 
+  open Category
+
   monoid : Category 0ℓ 0ℓ
   monoid .O = ⊤
   monoid .M = λ _ _ → Carrier m
@@ -122,33 +129,95 @@ module _ {A : Set} (m : Monoid A) where
   monoid .identity-andThen = neu-<>
   monoid .andThen-identity = <>-neu
 
-
-
-
-
-
-
-
-
-
-
-
 ---------------------------------------------------------------------------
 -- Category of monoids
 
+open import Data.Product.Base using (∃; _,_)
 
+module _ where
 
+  open _=Monoid>_
 
+  open Category
 
-
-
-
-
-
+  monoids : Category (Level.suc 0ℓ) 0ℓ
+  monoids .O = ∃ Monoid
+  monoids .M (S , mS) (T , mT) = mS =Monoid> mT
+  monoids .identity .hom-fun = id
+  monoids .identity .neu-neu = refl
+  monoids .identity .<>-<> s0 s1 = refl
+  (monoids andThen f) g .hom-fun x = g .hom-fun (f .hom-fun x)
+  (monoids andThen f) g .neu-neu rewrite f .neu-neu = g .neu-neu
+  (monoids andThen f) g .<>-<> s0 s1 rewrite f .<>-<> s0 s1 = g .<>-<> _ _
+  monoids .andThen-assoc f g h = monHomEq _ _ refl
+  monoids .identity-andThen = monHomEq _ _ refl
+  monoids .andThen-identity = monHomEq _ _ refl
 
 
 ---------------------------------------------------------------------------
--- Squish but for categories!
+-- Crush but for categories!
+
+
+open import Data.List.Base using (List; []; _∷_)
+
+
+data Path {A : Set c}
+       (R : A  →      A  → Set ℓ)
+       (s : A) : (t : A) → Set (c ⊔ ℓ) where
+  []  : ----------
+        Path R s s
+
+  _∷_ : ∀ {m} → R s m →
+        ∀ {t} → Path R m t →
+        --------------------
+        Path R s t
+
+{-
+  _<:_ : ∀ {m} → R m s →
+         ∀ {t} → Path R m t →
+         Path R s t
+-}
+
+module _ {c ℓ} {A : Set c} {R : A → A → Set ℓ} where
+
+  reflexive : ∀ {s : A} → Path R s s
+  reflexive = []
+
+  transitive : ∀ {s m t : A} → Path R s m → Path R m t → Path R s t
+  transitive []       ys = ys
+  transitive (x ∷ xs) ys = x ∷ transitive xs ys
+
+module _ {c ℓ} (C : Category c ℓ) where
+
+  open Category C
+
+  crush : ∀ {s t} → Path M s t → M s t
+  crush []       = identity
+  crush (f ∷ fs) = f andThen crush fs
+
+  crush-reflexive : ∀ {s} → crush (reflexive {s = s}) ≡ identity
+  crush-reflexive = refl
+
+  crush-transitive : ∀ {s m t} (xs : Path M s m) (ys : Path M m t) →
+    crush (transitive xs ys) ≡ crush xs andThen crush ys
+  crush-transitive []       ys = sym identity-andThen
+  crush-transitive (x ∷ xs) ys = let open ≡-Reasoning in begin
+    x andThen crush (transitive xs ys)
+      ≡⟨ cong (x andThen_) (crush-transitive xs ys) ⟩
+    (x andThen (crush xs andThen crush ys))
+      ≡⟨ andThen-assoc x (crush xs) (crush ys) ⟨
+    ((x andThen crush xs) andThen crush ys)
+      ≡⟨⟩
+    (crush (x ∷ xs) andThen crush ys) ∎
+
+
+ -- ...
+ -- ...
+ -- it's a FUNCTOR!
+
+
+
+
 
 
 
