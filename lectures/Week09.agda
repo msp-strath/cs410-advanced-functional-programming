@@ -160,6 +160,7 @@ module _ where
 
 open import Data.List.Base using (List; []; _∷_)
 
+-- the reflexive transitive closure of a Relation
 
 data Path {A : Set c}
        (R : A  →      A  → Set ℓ)
@@ -172,7 +173,8 @@ data Path {A : Set c}
         --------------------
         Path R s t
 
-{-
+{- if we wanted to make it symmetric, we could add e.g.
+
   _<:_ : ∀ {m} → R m s →
          ∀ {t} → Path R m t →
          Path R s t
@@ -214,34 +216,3 @@ module _ {c ℓ} (C : Category c ℓ) where
  -- ...
  -- ...
  -- it's a FUNCTOR!
-
-
-
-
-
-
-
----------------------------------------------------------------------------
--- Proof by reflection
-
-
--- DEFINE syntactic representation of lumps of compositions
-
--- DEFINE semantics via composition
--- DEFINE semantics equivalence
-
--- DEFINE evaluation
--- DEFINE normalisation
-
--- DEFINE normalisation equivalence
-
-
--- PROVE normalisation preserves semantics
-
-
-
--- PROVE normalisation equivalence implies semantics equivalence
-
-
-
--- USE for proof
