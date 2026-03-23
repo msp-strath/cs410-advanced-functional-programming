@@ -185,6 +185,7 @@ module _ {c ℓ} {A : Set c} {R : A → A → Set ℓ} where
   reflexive : ∀ {s : A} → Path R s s
   reflexive = []
 
+  -- _++_ in disguise
   transitive : ∀ {s m t : A} → Path R s m → Path R m t → Path R s t
   transitive []       ys = ys
   transitive (x ∷ xs) ys = x ∷ transitive xs ys
