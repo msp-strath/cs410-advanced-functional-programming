@@ -80,12 +80,12 @@ module _
     module G = _=Category>_ G
     open _=Category>_
 
-  ANDTHEN : S =Category> T
-  ANDTHEN .obj-fun = λ s → G .obj-fun (F .obj-fun s)
-  ANDTHEN .hom-fun = λ f → G .hom-fun (F .hom-fun f)
-  ANDTHEN .identity-identity {o}
+  _ANDTHEN_ : S =Category> T
+  _ANDTHEN_ .obj-fun = λ s → G .obj-fun (F .obj-fun s)
+  _ANDTHEN_ .hom-fun = λ f → G .hom-fun (F .hom-fun f)
+  _ANDTHEN_ .identity-identity {o}
     rewrite F.identity-identity {o} = G.identity-identity
-  ANDTHEN .andThen-andThen f g
+  _ANDTHEN_ .andThen-andThen f g
     rewrite F.andThen-andThen f g = G.andThen-andThen (F.hom-fun f) (F.hom-fun g)
 
 -- Crush is a Functor
@@ -122,18 +122,23 @@ module _
   {c1 c2 ℓ1 ℓ2}
   {A : Set c1}
   {R : A → A → Set ℓ1} {T : Category c2 ℓ2}
-  (fun : path R =Category> T) where
+  (FUN : path R =Category> T) where
 
-  module F = _=Category>_ fun
+  module F = _=Category>_ FUN
   module T = Category T
 
   edgeMap : ∀ {s t} → R s t → T.M (F.obj-fun s) (F.obj-fun t)
   edgeMap r = F.hom-fun (r ∷ [])
 
+  -- foldMap
+  FUN' : path R =Category> T
+  FUN' = MAP F.obj-fun edgeMap ANDTHEN CRUSH T
 
+  module F' = _=Category>_ FUN'
 
-
-
+  wow : forall {s t}(rs : Path R s t) -> F.hom-fun rs ≡ F'.hom-fun rs
+  wow [] = F.identity-identity
+  wow (r ∷ rs) rewrite F.andThen-andThen (r ∷ []) rs | wow rs = refl
 
 
 ---------------------------------------------------------------------------
@@ -142,20 +147,101 @@ module _
 
 -- DEFINE syntactic representation of lumps of compositions
 
+module Solver {c l} (C : Category c l) where
+
+  module C = Category C
+
+  variable s m m1 m2 t : C.O
+
+  data Expr : C.O → C.O → Set (c ⊔ l) where
+    `id : ∀ {o} → Expr o o
+    ` : ∀ {s t} → C.M s t → Expr s t
+    _`andThen_ : ∀ {s m t} → Expr s m → Expr m t → Expr s t
+
+  open import Data.Empty using (⊥)
+
+  _ : (f : Expr s m1) (g : Expr m1 m2) (h : Expr m2 t) →
+       (f `andThen g) `andThen             h
+      ≡ f             `andThen (g `andThen h)
+      → ⊥
+  _ = λ _ _ _ ()
 
 
+  ⟦_⟧ : Expr s t → C.M s t
+  ⟦ `id ⟧ = C.identity
+  ⟦ ` f ⟧ = f
+  ⟦ e1 `andThen e2 ⟧ = ⟦ e1 ⟧ C.andThen ⟦ e2 ⟧
 
 
 -- DEFINE semantics via composition
 -- DEFINE semantics equivalence
+
+  infix 1 _≋_
+  _≋_ : (e1 e2 : Expr s t) → Set l
+  e1 ≋ e2 = ⟦ e1 ⟧ ≡ ⟦ e2 ⟧
+
+  _ : (f : Expr s m1) (g : Expr m1 m2) (h : Expr m2 t) →
+      (f `andThen g) `andThen             h
+      ≋ f            `andThen (g `andThen h)
+  _ = λ f g h → C.andThen-assoc ⟦ f ⟧ ⟦ g ⟧ ⟦ h ⟧
+
+
+  eval : Expr s t → Path C.M s t
+  eval `id = []
+  eval (` f) = f ∷ []
+  eval (e1 `andThen e2) = transitive (eval e1) (eval e2)
+
+  normalise : Expr s t → C.M s t
+  normalise e = crush C (eval e)
+
+  normalise-correct : (e : Expr s t) → normalise e ≡ ⟦ e ⟧
+  normalise-correct `id = refl
+  normalise-correct (` f) = C.andThen-identity
+  normalise-correct (e1 `andThen e2) = let open ≡-Reasoning in begin
+    normalise (e1 `andThen e2)
+      ≡⟨⟩
+    crush C (transitive (eval e1) (eval e2))
+      ≡⟨ crush-transitive C (eval e1) (eval e2) ⟩
+    (crush C (eval e1) C.andThen crush C (eval e2))
+      ≡⟨⟩
+    (normalise e1 C.andThen normalise e2)
+      ≡⟨ cong₂ C._andThen_ (normalise-correct e1) (normalise-correct e2) ⟩
+    (⟦ e1 ⟧ C.andThen ⟦ e2 ⟧)
+      ≡⟨⟩
+    ⟦ e1 `andThen e2 ⟧
+      ∎
 
 -- DEFINE evaluation
 -- DEFINE normalisation
 
 -- DEFINE normalisation equivalence
 
+  magic : (e1 e2 : Expr s t) →
+          eval e1 ≡ eval e2 →
+          ⟦ e1 ⟧ ≡ ⟦ e2 ⟧
+  magic e1 e2 eq = let open ≡-Reasoning in
+    ⟦ e1 ⟧
+      ≡⟨ normalise-correct e1 ⟨
+    normalise e1
+      ≡⟨⟩
+    crush C (eval e1)
+      ≡⟨ cong (crush C) eq ⟩
+    crush C (eval e2)
+      ≡⟨⟩
+    normalise e2
+      ≡⟨ normalise-correct e2 ⟩
+    ⟦ e2 ⟧
+      ∎
 
 -- PROVE normalisation preserves semantics
+
+  _ : (f : Expr s m1) (g : Expr m1 m2) (h : Expr m2 t) →
+       (f `andThen g) `andThen h
+      ≋ f `andThen (g `andThen h)
+  _ = λ f g h → magic
+        ((` ⟦ f ⟧ `andThen ` ⟦ g ⟧) `andThen ` ⟦ h ⟧)
+        (` ⟦ f ⟧ `andThen (` ⟦ g ⟧ `andThen ` ⟦ h ⟧))
+        refl
 
 
 
